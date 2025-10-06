@@ -108,9 +108,9 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
   const permalinks: any[] = []
   const errors: string[] = []
 
-  // Expected CSV format:
+  // Flexible CSV format - supports any combination of these columns:
   // url,code,utm_source,utm_medium,utm_campaign,utm_term,utm_content,discount_code,discount_type,discount_value
-  const expectedColumns = [
+  const supportedColumns = [
     'url', 'code', 'utm_source', 'utm_medium', 'utm_campaign', 
     'utm_term', 'utm_content', 'discount_code', 'discount_type', 'discount_value'
   ]
@@ -129,8 +129,14 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
     try {
       const values = parseCSVLine(line)
       
-      // Create permalink object
-      const permalink: any = {}
+      // Create permalink object with defaults
+      const permalink: any = {
+        utm_term: '',
+        utm_content: '',
+        discount_code: '',
+        discount_type: 'percentage',
+        discount_value: 0
+      }
 
       if (hasHeaders && headers.length > 0) {
         // Map by header names
@@ -173,7 +179,7 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
           }
         })
       } else {
-        // Map by position
+        // Map by position - flexible for any number of columns
         if (values.length > 0) permalink.url = values[0]?.trim()
         if (values.length > 1) permalink.code = values[1]?.trim()
         if (values.length > 2) permalink.utm_source = values[2]?.trim()
@@ -196,20 +202,26 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
       try {
         new URL(permalink.url)
       } catch {
-        errors.push(`Row ${i + 1}: Invalid URL format`)
+        errors.push(`Row ${i + 1}: Invalid URL format: ${permalink.url}`)
         continue
       }
 
       // Validate discount type
       if (permalink.discount_type && !['percentage', 'amount'].includes(permalink.discount_type)) {
-        errors.push(`Row ${i + 1}: Invalid discount type (must be 'percentage' or 'amount')`)
+        errors.push(`Row ${i + 1}: Invalid discount type (must be 'percentage' or 'amount'): ${permalink.discount_type}`)
         continue
       }
+
+      // Ensure required UTM fields have values
+      if (!permalink.utm_source) permalink.utm_source = ''
+      if (!permalink.utm_medium) permalink.utm_medium = ''
+      if (!permalink.utm_campaign) permalink.utm_campaign = ''
 
       permalinks.push(permalink)
 
     } catch (error) {
       errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Parse error'}`)
+      console.error(`CSV parsing error on row ${i + 1}:`, error)
     }
   }
 
