@@ -132,8 +132,10 @@ export default function AppPage() {
   }
 
   if (!merchant) {
-    // Show demo mode if no environment variables are configured
-    const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your_')
+    // Show demo mode if no environment variables are configured OR if shop is demo-shop
+    const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+                   process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your_') ||
+                   getShop() === 'demo-shop.myshopify.com'
     
     if (isDemo) {
       return (
