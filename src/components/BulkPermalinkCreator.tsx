@@ -168,18 +168,37 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
   }
 
   const handleFileUpload = (files: File[]) => {
-    const file = files[0]
-    if (!file) return
+    try {
+      const file = files[0]
+      if (!file) return
 
-    setCsvFile(file)
-    
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const content = e.target?.result as string
-      setCsvData(content)
-      previewCSV(content)
+      // Validate file type
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        setError('Please select a CSV file')
+        return
+      }
+
+      setCsvFile(file)
+      
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string
+          setCsvData(content)
+          previewCSV(content)
+        } catch (error) {
+          console.error('File read error:', error)
+          setError('Failed to read file content')
+        }
+      }
+      reader.onerror = () => {
+        setError('Failed to read file')
+      }
+      reader.readAsText(file)
+    } catch (error) {
+      console.error('File upload error:', error)
+      setError('Failed to process file')
     }
-    reader.readAsText(file)
   }
 
   const previewCSV = (content: string) => {
@@ -265,7 +284,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
             csv_data: csvData,
             template_id: selectedTemplate || undefined,
             campaign_id: selectedCampaign || undefined,
-            has_headers
+            has_headers: hasHeaders
           })
         })
 
@@ -521,13 +540,28 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
           type="file"
           accept=".csv"
           onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) {
-              handleFileUpload([file])
+            try {
+              const file = e.target.files?.[0]
+              if (file) {
+                handleFileUpload([file])
+              }
+            } catch (error) {
+              console.error('File upload error:', error)
+              setError('Failed to read file. Please try again.')
             }
           }}
-          style={{ marginTop: '8px' }}
+          style={{ 
+            marginTop: '8px',
+            padding: '8px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            width: '100%',
+            maxWidth: '300px'
+          }}
         />
+        <Text variant="bodySm" as="p" tone="subdued" style={{ marginTop: '4px' }}>
+          Select a CSV file with columns: url, code, utm_source, utm_medium, utm_campaign
+        </Text>
       </div>
       
       {csvFile && (
