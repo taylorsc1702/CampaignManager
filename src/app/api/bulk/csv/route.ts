@@ -120,6 +120,7 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
 
   if (hasHeaders && lines.length > 0) {
     headers = parseCSVLine(lines[0])
+    console.log('Parsed headers:', headers)
   }
 
   for (let i = startIndex; i < lines.length; i++) {
@@ -140,10 +141,13 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
 
       if (hasHeaders && headers.length > 0) {
         // Map by header names
+        console.log(`Processing row ${i + 1}:`, { headers, values })
         headers.forEach((header, index) => {
           const value = values[index]?.trim()
+          const cleanHeader = header.toLowerCase().replace(/[^a-z_]/g, '')
+          console.log(`  Header: "${header}" -> Clean: "${cleanHeader}" -> Value: "${value}"`)
+          
           if (value) {
-            const cleanHeader = header.toLowerCase().replace(/[^a-z_]/g, '')
             switch (cleanHeader) {
               case 'url':
                 permalink.url = value
@@ -178,6 +182,7 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
             }
           }
         })
+        console.log(`  Result:`, permalink)
       } else {
         // Map by position - flexible for any number of columns
         if (values.length > 0) permalink.url = values[0]?.trim()
