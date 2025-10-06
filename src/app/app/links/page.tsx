@@ -31,7 +31,7 @@ interface Link {
   variant_id: string
   quantity: number
   discount_code?: string
-  permalink_type: 'product' | 'cart'
+  permalink_type: 'product' | 'cart' | 'custom'
   active: boolean
   created_at: string
   scans_count?: number
@@ -165,8 +165,14 @@ export default function LinksPage() {
     link.code,
     link.product_handle,
     link.variant_id,
-    <Badge tone={link.permalink_type === 'product' ? 'success' : 'info'}>
-      {link.permalink_type === 'product' ? 'Product' : 'Cart'}
+    <Badge tone={
+      link.permalink_type === 'product' ? 'success' : 
+      link.permalink_type === 'cart' ? 'info' : 
+      'warning'
+    }>
+      {link.permalink_type === 'product' ? 'Product' : 
+       link.permalink_type === 'cart' ? 'Cart' : 
+       'Custom'}
     </Badge>,
     link.quantity.toString(),
     link.discount_code || '-',

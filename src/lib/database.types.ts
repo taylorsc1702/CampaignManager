@@ -82,7 +82,7 @@ export interface Database {
           utm_term?: string
           utm_content?: string
           target_url: string
-          permalink_type: 'product' | 'cart'
+          permalink_type: 'product' | 'cart' | 'custom'
           active: boolean
           created_at: string
           updated_at: string
@@ -103,7 +103,7 @@ export interface Database {
           utm_term?: string
           utm_content?: string
           target_url: string
-          permalink_type?: 'product' | 'cart'
+          permalink_type?: 'product' | 'cart' | 'custom'
           active?: boolean
           created_at?: string
           updated_at?: string
@@ -124,7 +124,7 @@ export interface Database {
           utm_term?: string
           utm_content?: string
           target_url?: string
-          permalink_type?: 'product' | 'cart'
+          permalink_type?: 'product' | 'cart' | 'custom'
           active?: boolean
           created_at?: string
           updated_at?: string

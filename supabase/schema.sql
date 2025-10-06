@@ -42,7 +42,7 @@ CREATE TABLE links (
     utm_term TEXT,
     utm_content TEXT,
     target_url TEXT NOT NULL,
-    permalink_type TEXT DEFAULT 'product' CHECK (permalink_type IN ('product', 'cart')),
+    permalink_type TEXT DEFAULT 'product' CHECK (permalink_type IN ('product', 'cart', 'custom')),
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
