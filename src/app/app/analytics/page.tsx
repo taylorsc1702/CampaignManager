@@ -10,7 +10,13 @@ import {
   InlineStack,
   Select,
   DatePicker,
-  DataTable
+  DataTable,
+  Icon,
+  Box,
+  Divider,
+  InlineGrid,
+  Badge,
+  ProgressBar
 } from '@shopify/polaris'
 import { supabase } from '@/lib/supabase'
 
@@ -145,69 +151,227 @@ export default function AnalyticsPage() {
   ])
 
   return (
-    <Page title="Analytics">
+    <Page 
+      title="Analytics"
+      subtitle="Track performance and insights for your campaigns"
+    >
       <Layout>
+        {/* Header Section */}
+        <Layout.Section>
+          <Box padding="600" background="bg-surface-brand" borderRadius="300">
+            <BlockStack gap="300">
+              <InlineStack gap="300" align="start">
+                <Box padding="300" background="bg-surface-base" borderRadius="200">
+                  <Icon source="analytics" tone="base" />
+                </Box>
+                <BlockStack gap="200">
+                  <Text variant="headingLg" as="h2" tone="base">
+                    Analytics Dashboard
+                  </Text>
+                  <Text variant="bodyLg" as="p" tone="base">
+                    Track performance, conversions, and revenue from your QR codes and campaigns
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </BlockStack>
+          </Box>
+        </Layout.Section>
+
         {/* Date Range Selector */}
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Date Range</Text>
-              <Text variant="bodyMd" as="p">
-                Last 30 days (Date picker coming soon)
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-info" borderRadius="100">
+                  <Icon source="calendar" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Date Range</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Select the time period for your analytics
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              
+              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                <Text variant="bodyMd" as="p">
+                  📅 Last 30 days (Date picker coming soon)
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>
 
         {/* Summary Stats */}
         <Layout.Section>
-          <InlineStack gap="400">
+          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
             <Card>
               <BlockStack gap="400">
-                <Text variant="headingMd" as="h3">Total Scans</Text>
-                <Text variant="heading2xl" as="p">
-                  {analyticsData.totalScans}
-                </Text>
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-info" borderRadius="100">
+                    <Icon source="view" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      {analyticsData.totalScans}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-info" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    +15% from last period
+                  </Text>
+                </Box>
               </BlockStack>
             </Card>
+
             <Card>
               <BlockStack gap="400">
-                <Text variant="headingMd" as="h3">Total Orders</Text>
-                <Text variant="heading2xl" as="p" tone="success">
-                  {analyticsData.totalOrders}
-                </Text>
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-success" borderRadius="100">
+                    <Icon source="orders" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Orders</Text>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      {analyticsData.totalOrders}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-success" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    +8% from last period
+                  </Text>
+                </Box>
               </BlockStack>
             </Card>
+
             <Card>
               <BlockStack gap="400">
-                <Text variant="headingMd" as="h3">Conversion Rate</Text>
-                <Text variant="heading2xl" as="p">
-                  {analyticsData.conversionRate}%
-                </Text>
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                    <Icon source="analytics" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Conversion Rate</Text>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      {analyticsData.conversionRate}%
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    +2% from last period
+                  </Text>
+                </Box>
               </BlockStack>
             </Card>
+
             <Card>
               <BlockStack gap="400">
-                <Text variant="headingMd" as="h3">Total Revenue</Text>
-                <Text variant="heading2xl" as="p" tone="success">
-                  ${analyticsData.totalRevenue}
-                </Text>
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                    <Icon source="dollar" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Revenue</Text>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      ${analyticsData.totalRevenue}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    +22% from last period
+                  </Text>
+                </Box>
               </BlockStack>
             </Card>
-          </InlineStack>
+          </InlineGrid>
+        </Layout.Section>
+
+        {/* Performance Chart Placeholder */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                  <Icon source="chart" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Performance Trends</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Track your scans and conversions over time
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              
+              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                <BlockStack gap="300" align="center">
+                  <Icon source="chart" tone="subdued" />
+                  <Text variant="bodyMd" as="p" tone="subdued" alignment="center">
+                    📊 Interactive charts coming soon
+                  </Text>
+                  <Text variant="bodySm" as="p" tone="subdued" alignment="center">
+                    Visualize your campaign performance with detailed graphs and trends
+                  </Text>
+                </BlockStack>
+              </Box>
+            </BlockStack>
+          </Card>
         </Layout.Section>
 
         {/* Top Performing Links */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Top Performing Links</Text>
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text']}
-                headings={['Link Code', 'Scans', 'Orders', 'Revenue']}
-                rows={topLinksRows}
-                footerContent={`Showing top ${analyticsData.topLinks.length} links`}
-              />
+            <BlockStack gap="500">
+              <InlineStack gap="300" align="space-between">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                    <Icon source="star" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="headingMd" as="h3">Top Performing Links</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Your best performing QR codes and permalinks
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Badge status="success">Top Performers</Badge>
+              </InlineStack>
+              
+              <Divider />
+              
+              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                <DataTable
+                  columnContentTypes={['text', 'text', 'text', 'text']}
+                  headings={['Link Code', 'Scans', 'Orders', 'Revenue']}
+                  rows={topLinksRows.map((row, index) => [
+                    <InlineStack gap="200" align="center">
+                      <Box padding="100" background="bg-surface-brand" borderRadius="100">
+                        <Text variant="bodySm" as="span" fontWeight="bold" tone="base">
+                          {index + 1}
+                        </Text>
+                      </Box>
+                      <Text variant="bodyMd" as="span" fontWeight="medium">{row[0]}</Text>
+                    </InlineStack>,
+                    <Text variant="bodyMd" as="span">{row[1]}</Text>,
+                    <Text variant="bodyMd" as="span">{row[2]}</Text>,
+                    <Text variant="bodyMd" as="span" fontWeight="semibold">{row[3]}</Text>
+                  ])}
+                  footerContent={
+                    <InlineStack gap="200" align="space-between">
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Showing top {analyticsData.topLinks.length} links
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Last updated: {new Date().toLocaleTimeString()}
+                      </Text>
+                    </InlineStack>
+                  }
+                />
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>

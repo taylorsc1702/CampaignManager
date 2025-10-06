@@ -11,7 +11,13 @@ import {
   Banner,
   FormLayout,
   TextField,
-  Select
+  Select,
+  Icon,
+  Box,
+  Divider,
+  InlineGrid,
+  Badge,
+  InlineStack
 } from '@shopify/polaris'
 import { supabase } from '@/lib/supabase'
 
@@ -104,8 +110,33 @@ export default function SettingsPage() {
   }
 
   return (
-    <Page title="Settings">
+    <Page 
+      title="Settings"
+      subtitle="Configure your app preferences and account settings"
+    >
       <Layout>
+        {/* Header Section */}
+        <Layout.Section>
+          <Box padding="600" background="bg-surface-brand" borderRadius="300">
+            <BlockStack gap="300">
+              <InlineStack gap="300" align="start">
+                <Box padding="300" background="bg-surface-base" borderRadius="200">
+                  <Icon source="settings" tone="base" />
+                </Box>
+                <BlockStack gap="200">
+                  <Text variant="headingLg" as="h2" tone="base">
+                    Settings & Configuration
+                  </Text>
+                  <Text variant="bodyLg" as="p" tone="base">
+                    Manage your account settings, plan preferences, and app configuration
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </BlockStack>
+          </Box>
+        </Layout.Section>
+
+        {/* Status Messages */}
         <Layout.Section>
           {success && (
             <Banner tone="success">
@@ -118,10 +149,25 @@ export default function SettingsPage() {
               <Text variant="bodyMd" as="p">{error}</Text>
             </Banner>
           )}
+        </Layout.Section>
 
+        {/* Account Information */}
+        <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Account Information</Text>
+            <BlockStack gap="500">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                  <Icon source="person" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Account Information</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Your account details and subscription information
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              
+              <Divider />
               
               <FormLayout>
                 <TextField
@@ -129,6 +175,7 @@ export default function SettingsPage() {
                   value={merchant?.shop_domain || ''}
                   readOnly
                   autoComplete="off"
+                  helpText="Your Shopify store domain"
                 />
 
                 <Select
@@ -137,6 +184,7 @@ export default function SettingsPage() {
                   value={merchant?.plan || 'starter'}
                   onChange={updatePlan}
                   disabled={saving}
+                  helpText="Choose the plan that best fits your needs"
                 />
 
                 <TextField
@@ -149,52 +197,110 @@ export default function SettingsPage() {
               </FormLayout>
             </BlockStack>
           </Card>
+        </Layout.Section>
 
+        {/* Webhook Configuration */}
+        <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Webhook Configuration</Text>
+            <BlockStack gap="500">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                  <Icon source="webhook" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Webhook Configuration</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Set up automatic order tracking with Shopify webhooks
+                  </Text>
+                </BlockStack>
+              </InlineStack>
               
-              <BlockStack gap="400">
-                <Text variant="bodyMd" as="p">
-                  To track orders automatically, configure this webhook URL in your Shopify admin:
-                </Text>
-                
-                <TextField
-                  label="Order Webhook URL"
-                  value={`${process.env.SHOPIFY_APP_URL}/api/webhooks/orders-create`}
-                  readOnly
-                  autoComplete="off"
-                  helpText="Add this URL in Shopify Admin > Settings > Notifications > Webhooks"
-                />
+              <Divider />
+              
+              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                <BlockStack gap="400">
+                  <Text variant="bodyMd" as="p">
+                    To track orders automatically, configure this webhook URL in your Shopify admin:
+                  </Text>
+                  
+                  <TextField
+                    label="Order Webhook URL"
+                    value={`${process.env.SHOPIFY_APP_URL}/api/webhooks/orders-create`}
+                    readOnly
+                    autoComplete="off"
+                    helpText="Add this URL in Shopify Admin > Settings > Notifications > Webhooks"
+                  />
 
-                <Text variant="bodyMd" as="p" tone="subdued">
-                  Event: Order creation<br />
-                  Format: JSON
-                </Text>
-              </BlockStack>
+                  <Box padding="300" background="bg-surface-info" borderRadius="200">
+                    <BlockStack gap="200">
+                      <Text variant="bodySm" as="p" fontWeight="semibold">
+                        Webhook Settings:
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Event: Order creation<br />
+                        Format: JSON
+                      </Text>
+                    </BlockStack>
+                  </Box>
+                </BlockStack>
+              </Box>
             </BlockStack>
           </Card>
+        </Layout.Section>
 
+        {/* App Information */}
+        <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">App Information</Text>
+            <BlockStack gap="500">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                  <Icon source="info" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">App Information</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Learn more about Campaign Manager and its features
+                  </Text>
+                </BlockStack>
+              </InlineStack>
               
-              <BlockStack gap="400">
-                <Text variant="bodyMd" as="p">
-                  <strong>Campaign Manager</strong> helps you track QR codes and permalinks for your Shopify store.
-                </Text>
-                
-                <Text variant="bodyMd" as="p">
-                  Features:
-                </Text>
-                <ul>
-                  <li>Generate QR codes and short links for products</li>
-                  <li>Track scans and conversions</li>
-                  <li>UTM parameter tracking</li>
-                  <li>Automatic discount code integration</li>
-                  <li>Analytics dashboard</li>
-                </ul>
-              </BlockStack>
+              <Divider />
+              
+              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                <BlockStack gap="400">
+                  <Text variant="bodyMd" as="p">
+                    <strong>Campaign Manager</strong> helps you track QR codes and permalinks for your Shopify store.
+                  </Text>
+                  
+                  <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
+                    <Box padding="300" background="bg-surface-success" borderRadius="200">
+                      <BlockStack gap="200">
+                        <Text variant="bodySm" as="p" fontWeight="semibold">
+                          🎯 Core Features:
+                        </Text>
+                        <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+                          <li>Generate QR codes and short links</li>
+                          <li>Track scans and conversions</li>
+                          <li>UTM parameter tracking</li>
+                        </ul>
+                      </BlockStack>
+                    </Box>
+
+                    <Box padding="300" background="bg-surface-info" borderRadius="200">
+                      <BlockStack gap="200">
+                        <Text variant="bodySm" as="p" fontWeight="semibold">
+                          🚀 Advanced Features:
+                        </Text>
+                        <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+                          <li>Automatic discount code integration</li>
+                          <li>Analytics dashboard</li>
+                          <li>Bulk operations and CSV import</li>
+                        </ul>
+                      </BlockStack>
+                    </Box>
+                  </InlineGrid>
+                </BlockStack>
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>

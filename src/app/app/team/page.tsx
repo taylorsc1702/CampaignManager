@@ -9,7 +9,12 @@ import {
   BlockStack,
   InlineStack,
   Text,
-  Banner
+  Banner,
+  Icon,
+  Box,
+  Divider,
+  InlineGrid,
+  Badge
 } from '@shopify/polaris'
 import { supabase } from '@/lib/supabase'
 import CollaboratorManager from '@/components/CollaboratorManager'
@@ -123,72 +128,235 @@ export default function TeamPage() {
   return (
     <Page 
       title="Team Management"
+      subtitle="Collaborate with your team on campaigns and analytics"
       primaryAction={{
         content: 'Manage Team',
-        onAction: () => setShowCollaboratorManager(true)
+        onAction: () => setShowCollaboratorManager(true),
+        icon: 'add'
       }}
     >
       <Layout>
+        {/* Header Section */}
+        <Layout.Section>
+          <Box padding="600" background="bg-surface-brand" borderRadius="300">
+            <BlockStack gap="300">
+              <InlineStack gap="300" align="start">
+                <Box padding="300" background="bg-surface-base" borderRadius="200">
+                  <Icon source="person" tone="base" />
+                </Box>
+                <BlockStack gap="200">
+                  <Text variant="headingLg" as="h2" tone="base">
+                    Team Management
+                  </Text>
+                  <Text variant="bodyLg" as="p" tone="base">
+                    Collaborate with your team members on campaigns, analytics, and link management
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </BlockStack>
+          </Box>
+        </Layout.Section>
+
+        {/* Current Plan Status */}
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Team Collaborators</Text>
-              <Text variant="bodyMd" as="p">
-                Manage your team members and their access to the Campaign Manager app. 
-                Collaborate with your marketing team to create and track QR codes and campaigns.
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-success" borderRadius="100">
+                  <Icon source="checkmark" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Current Plan</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Your current subscription and team limits
+                  </Text>
+                </BlockStack>
+              </InlineStack>
               
-              <InlineStack gap="200">
+              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                <InlineStack gap="400" align="space-between">
+                  <BlockStack gap="200">
+                    <Text variant="bodyMd" as="p" fontWeight="semibold">
+                      {merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1)} Plan
+                    </Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Active subscription
+                    </Text>
+                  </BlockStack>
+                  <Badge status="success">Active</Badge>
+                </InlineStack>
+              </Box>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        {/* Plan Features Grid */}
+        <Layout.Section>
+          <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
+            <Card>
+              <BlockStack gap="400">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-info" borderRadius="100">
+                    <Icon source="person" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" fontWeight="semibold">Starter</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">1 user (just you)</Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-info" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    Perfect for individuals
+                  </Text>
+                </Box>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="400">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                    <Icon source="person" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" fontWeight="semibold">Growth</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">Up to 3 collaborators</Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    Great for small teams
+                  </Text>
+                </Box>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="400">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                    <Icon source="person" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" fontWeight="semibold">Pro</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">Unlimited collaborators</Text>
+                  </BlockStack>
+                </InlineStack>
+                <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                    For growing businesses
+                  </Text>
+                </Box>
+              </BlockStack>
+            </Card>
+          </InlineGrid>
+        </Layout.Section>
+
+        {/* Team Management Section */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="500">
+              <InlineStack gap="300" align="space-between">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                    <Icon source="team" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="headingMd" as="h3">Team Collaborators</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Manage your team members and their access to the Campaign Manager app
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
                 <Button 
                   variant="primary"
+                  icon="add"
                   onClick={() => setShowCollaboratorManager(true)}
                 >
                   Manage Team Members
                 </Button>
               </InlineStack>
+              
+              <Divider />
+              
+              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                <Text variant="bodyMd" as="p">
+                  Collaborate with your marketing team to create and track QR codes and campaigns. 
+                  Invite team members, assign roles, and manage permissions to streamline your workflow.
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>
 
+        {/* Role Permissions */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Current Plan: {merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1)}</Text>
+            <BlockStack gap="500">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                  <Icon source="settings" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Collaborator Roles</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Different permission levels for your team members
+                  </Text>
+                </BlockStack>
+              </InlineStack>
               
-              <BlockStack gap="200">
-                <Text variant="bodyMd" as="p">
-                  <strong>Collaborator Limits:</strong>
-                </Text>
-                <Text variant="bodyMd" as="p">
-                  • <strong>Starter:</strong> 1 user (just you)
-                </Text>
-                <Text variant="bodyMd" as="p">
-                  • <strong>Growth:</strong> Up to 3 collaborators
-                </Text>
-                <Text variant="bodyMd" as="p">
-                  • <strong>Pro:</strong> Unlimited collaborators
-                </Text>
-              </BlockStack>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
+                <Box padding="400" background="bg-surface-success" borderRadius="200">
+                  <BlockStack gap="300">
+                    <InlineStack gap="200" align="start">
+                      <Box padding="200" background="bg-surface-base" borderRadius="100">
+                        <Icon source="crown" tone="base" />
+                      </Box>
+                      <BlockStack gap="100">
+                        <Text variant="bodyMd" as="p" fontWeight="semibold">Owner</Text>
+                        <Text variant="bodySm" as="p" tone="subdued">Full access</Text>
+                      </BlockStack>
+                    </InlineStack>
+                    <Text variant="bodySm" as="p">
+                      Full access to all features, billing, and team management
+                    </Text>
+                  </BlockStack>
+                </Box>
 
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Collaborator Roles</Text>
-              
-              <BlockStack gap="200">
-                <Text variant="bodyMd" as="p">
-                  <strong>Owner:</strong> Full access to all features and billing
-                </Text>
-                <Text variant="bodyMd" as="p">
-                  <strong>Admin:</strong> Can manage team members, create campaigns, and access analytics
-                </Text>
-                <Text variant="bodyMd" as="p">
-                  <strong>Member:</strong> Can create links and QR codes, view basic analytics
-                </Text>
-              </BlockStack>
+                <Box padding="400" background="bg-surface-warning" borderRadius="200">
+                  <BlockStack gap="300">
+                    <InlineStack gap="200" align="start">
+                      <Box padding="200" background="bg-surface-base" borderRadius="100">
+                        <Icon source="settings" tone="base" />
+                      </Box>
+                      <BlockStack gap="100">
+                        <Text variant="bodyMd" as="p" fontWeight="semibold">Admin</Text>
+                        <Text variant="bodySm" as="p" tone="subdued">Management access</Text>
+                      </BlockStack>
+                    </InlineStack>
+                    <Text variant="bodySm" as="p">
+                      Can manage team members, create campaigns, and access analytics
+                    </Text>
+                  </BlockStack>
+                </Box>
+
+                <Box padding="400" background="bg-surface-info" borderRadius="200">
+                  <BlockStack gap="300">
+                    <InlineStack gap="200" align="start">
+                      <Box padding="200" background="bg-surface-base" borderRadius="100">
+                        <Icon source="person" tone="base" />
+                      </Box>
+                      <BlockStack gap="100">
+                        <Text variant="bodyMd" as="p" fontWeight="semibold">Member</Text>
+                        <Text variant="bodySm" as="p" tone="subdued">Basic access</Text>
+                      </BlockStack>
+                    </InlineStack>
+                    <Text variant="bodySm" as="p">
+                      Can create links and QR codes, view basic analytics
+                    </Text>
+                  </BlockStack>
+                </Box>
+              </InlineGrid>
             </BlockStack>
           </Card>
         </Layout.Section>
