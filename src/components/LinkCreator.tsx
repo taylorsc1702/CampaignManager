@@ -75,7 +75,36 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      // Get merchant access token
+      
+      // Demo mode - show mock products if no real data
+      const isDemo = merchant.id === 'demo-merchant'
+      
+      if (isDemo) {
+        const mockProducts = [
+          {
+            id: 'demo-product-1',
+            title: 'Demo Running Shoes',
+            variants: [
+              { id: 'demo-variant-1', title: 'Size 8 - Black', price: '99.99', sku: 'RUN-BLK-8', inventory_quantity: 50, available: true },
+              { id: 'demo-variant-2', title: 'Size 9 - Black', price: '99.99', sku: 'RUN-BLK-9', inventory_quantity: 30, available: true },
+              { id: 'demo-variant-3', title: 'Size 10 - White', price: '109.99', sku: 'RUN-WHT-10', inventory_quantity: 25, available: true }
+            ]
+          },
+          {
+            id: 'demo-product-2',
+            title: 'Demo T-Shirt',
+            variants: [
+              { id: 'demo-variant-4', title: 'Medium - Blue', price: '29.99', sku: 'TSH-BLU-M', inventory_quantity: 100, available: true },
+              { id: 'demo-variant-5', title: 'Large - Blue', price: '29.99', sku: 'TSH-BLU-L', inventory_quantity: 75, available: true }
+            ]
+          }
+        ]
+        setProducts(mockProducts)
+        setLoading(false)
+        return
+      }
+
+      // Real mode - get merchant access token
       const { data: merchantData } = await supabase
         .from('merchants')
         .select('access_token')
@@ -124,54 +153,59 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
       // Build target URL (Shopify cart URL)
       const targetUrl = `https://${merchant.shop_domain}/cart/${formData.variantId}:${formData.quantity}`
 
-      // Create discount code if provided
-      let discountCode = formData.discountCode
-      if (discountCode && formData.discountValue) {
-        try {
-          const { data: merchantData } = await supabase
-            .from('merchants')
-            .select('access_token')
-            .eq('id', merchant.id)
-            .single()
+      // Demo mode - skip database operations
+      const isDemo = merchant.id === 'demo-merchant'
+      
+      if (!isDemo) {
+        // Create discount code if provided
+        let discountCode = formData.discountCode
+        if (discountCode && formData.discountValue) {
+          try {
+            const { data: merchantData } = await supabase
+              .from('merchants')
+              .select('access_token')
+              .eq('id', merchant.id)
+              .single()
 
-          if (merchantData) {
-            await createShopifyDiscount(merchant.shop_domain, merchantData.access_token, {
-              code: discountCode,
-              percentage: formData.discountType === 'percentage' ? parseFloat(formData.discountValue) : undefined,
-              amount: formData.discountType === 'amount' ? parseFloat(formData.discountValue) : undefined
-            })
+            if (merchantData) {
+              await createShopifyDiscount(merchant.shop_domain, merchantData.access_token, {
+                code: discountCode,
+                percentage: formData.discountType === 'percentage' ? parseFloat(formData.discountValue) : undefined,
+                amount: formData.discountType === 'amount' ? parseFloat(formData.discountValue) : undefined
+              })
+            }
+          } catch (discountError) {
+            console.error('Failed to create discount:', discountError)
+            setError('Failed to create discount code')
+            return
           }
-        } catch (discountError) {
-          console.error('Failed to create discount:', discountError)
-          setError('Failed to create discount code')
-          return
+        }
+
+        // Save link to database
+        const { error: linkError } = await supabase
+          .from('links')
+          .insert({
+            merchant_id: merchant.id,
+            code: code,
+            product_id: formData.productId,
+            variant_id: formData.variantId,
+            quantity: parseInt(formData.quantity),
+            discount_code: discountCode || null,
+            utm_source: formData.utmSource || null,
+            utm_medium: formData.utmMedium || null,
+            utm_campaign: formData.utmCampaign || null,
+            utm_term: formData.utmTerm || null,
+            utm_content: formData.utmContent || null,
+            target_url: targetUrl,
+            active: true
+          })
+
+        if (linkError) {
+          throw new Error('Failed to save link')
         }
       }
 
-      // Save link to database
-      const { error: linkError } = await supabase
-        .from('links')
-        .insert({
-          merchant_id: merchant.id,
-          code: code,
-          product_id: formData.productId,
-          variant_id: formData.variantId,
-          quantity: parseInt(formData.quantity),
-          discount_code: discountCode || null,
-          utm_source: formData.utmSource || null,
-          utm_medium: formData.utmMedium || null,
-          utm_campaign: formData.utmCampaign || null,
-          utm_term: formData.utmTerm || null,
-          utm_content: formData.utmContent || null,
-          target_url: targetUrl,
-          active: true
-        })
-
-      if (linkError) {
-        throw new Error('Failed to save link')
-      }
-
-      // Generate short URL and QR code
+      // Generate short URL and QR code (works in both demo and real mode)
       const shortUrlValue = buildShortUrl(code)
       setShortUrl(shortUrlValue)
 

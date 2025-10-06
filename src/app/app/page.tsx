@@ -16,6 +16,11 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Dashboard from '@/components/Dashboard'
 import LinkCreator from '@/components/LinkCreator'
+import BulkLinkCreator from '@/components/BulkLinkCreator'
+import BulkPermalinkCreator from '@/components/BulkPermalinkCreator'
+import BulkOperationsManager from '@/components/BulkOperationsManager'
+import LinkTemplateManager from '@/components/LinkTemplateManager'
+import CollaboratorManager from '@/components/CollaboratorManager'
 
 interface Merchant {
   id: string
@@ -28,6 +33,11 @@ export default function AppPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showLinkCreator, setShowLinkCreator] = useState(false)
+  const [showBulkLinkCreator, setShowBulkLinkCreator] = useState(false)
+  const [showBulkPermalinkCreator, setShowBulkPermalinkCreator] = useState(false)
+  const [showBulkOperationsManager, setShowBulkOperationsManager] = useState(false)
+  const [showLinkTemplateManager, setShowLinkTemplateManager] = useState(false)
+  const [showCollaboratorManager, setShowCollaboratorManager] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -36,20 +46,29 @@ export default function AppPage() {
       return urlParams.get('shop')
     }
 
-    const fetchMerchant = async () => {
-      try {
-        const shop = getShop()
-        if (!shop) {
-          setError('No shop parameter found')
-          setLoading(false)
-          return
-        }
+  const fetchMerchant = async () => {
+    try {
+      const shop = getShop()
+      if (!shop) {
+        setError('No shop parameter found')
+        setLoading(false)
+        return
+      }
 
+      // Check if we're in demo mode or if database tables exist
+      try {
         const { data, error } = await supabase
           .from('merchants')
           .select('*')
           .eq('shop_domain', shop)
           .single()
+
+        if (error && error.code === 'PGRST116') {
+          // Table doesn't exist yet - show demo mode
+          setMerchant(null)
+          setLoading(false)
+          return
+        }
 
         if (error) {
           setError('Failed to load merchant data')
@@ -62,12 +81,17 @@ export default function AppPage() {
         }
 
         setMerchant(data)
-      } catch (err) {
-        setError('An error occurred while loading the app')
-      } finally {
-        setLoading(false)
+      } catch (dbError) {
+        // Database not set up yet - show demo mode
+        console.log('Database not set up yet, showing demo mode')
+        setMerchant(null)
       }
+    } catch (err) {
+      setError('An error occurred while loading the app')
+    } finally {
+      setLoading(false)
     }
+  }
 
     fetchMerchant()
   }, [])
@@ -108,6 +132,68 @@ export default function AppPage() {
   }
 
   if (!merchant) {
+    // Show demo mode if no environment variables are configured
+    const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your_')
+    
+    if (isDemo) {
+      return (
+        <Page title="Campaign Manager - Demo Mode">
+          <Layout>
+            <Layout.Section>
+              <Card>
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                  <Text variant="headingMd" as="h2">🎯 Campaign Manager Demo</Text>
+                  <Text variant="bodyMd" as="p">
+                    This is a demo of the Campaign Manager Shopify app. 
+                    To see the full functionality, you'll need to configure Supabase and Shopify credentials.
+                  </Text>
+                  <div style={{ marginTop: '2rem' }}>
+                    <Button 
+                      variant="primary" 
+                      onClick={() => setShowLinkCreator(true)}
+                    >
+                      🚀 Try Link Creator (Demo)
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </Layout.Section>
+            
+            <Layout.Section>
+              <Card>
+                <Text variant="headingMd" as="h3">📱 App Features Preview</Text>
+                <div style={{ marginTop: '1rem' }}>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Dashboard:</strong> View analytics, scans, conversions, and revenue tracking
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Link Creator:</strong> Generate QR codes and short links for products with discount codes
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Campaign Management:</strong> Organize links into marketing campaigns with UTM tracking
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Analytics:</strong> Track conversion rates, top performing links, and revenue attribution
+                  </Text>
+                </div>
+              </Card>
+            </Layout.Section>
+          </Layout>
+          
+          {showLinkCreator && (
+            <LinkCreator
+              merchant={{
+                id: 'demo-merchant',
+                shop_domain: 'demo-shop.myshopify.com',
+                plan: 'starter'
+              }}
+              onClose={() => setShowLinkCreator(false)}
+            />
+          )}
+        </Page>
+      )
+    }
+    
     return (
       <Page>
         <Layout>
@@ -138,6 +224,28 @@ export default function AppPage() {
         icon: PlusIcon,
         onAction: () => setShowLinkCreator(true)
       }}
+      secondaryActions={[
+        {
+          content: 'Bulk Links',
+          onAction: () => setShowBulkLinkCreator(true)
+        },
+        {
+          content: 'Bulk Permalinks',
+          onAction: () => setShowBulkPermalinkCreator(true)
+        },
+        {
+          content: 'Templates',
+          onAction: () => setShowLinkTemplateManager(true)
+        },
+        {
+          content: 'Operations',
+          onAction: () => setShowBulkOperationsManager(true)
+        },
+        {
+          content: 'Team',
+          onAction: () => setShowCollaboratorManager(true)
+        }
+      ]}
     >
       <Layout>
         <Layout.Section>
@@ -149,6 +257,41 @@ export default function AppPage() {
         <LinkCreator
           merchant={merchant}
           onClose={() => setShowLinkCreator(false)}
+        />
+      )}
+
+      {showBulkLinkCreator && (
+        <BulkLinkCreator
+          merchant={merchant}
+          onClose={() => setShowBulkLinkCreator(false)}
+        />
+      )}
+
+      {showBulkPermalinkCreator && (
+        <BulkPermalinkCreator
+          merchant={merchant}
+          onClose={() => setShowBulkPermalinkCreator(false)}
+        />
+      )}
+
+      {showBulkOperationsManager && (
+        <BulkOperationsManager
+          merchant={merchant}
+          onClose={() => setShowBulkOperationsManager(false)}
+        />
+      )}
+
+      {showLinkTemplateManager && (
+        <LinkTemplateManager
+          merchant={merchant}
+          onClose={() => setShowLinkTemplateManager(false)}
+        />
+      )}
+
+      {showCollaboratorManager && (
+        <CollaboratorManager
+          merchant={merchant}
+          onClose={() => setShowCollaboratorManager(false)}
         />
       )}
     </Page>

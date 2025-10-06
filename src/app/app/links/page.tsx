@@ -17,7 +17,7 @@ import {
 } from '@shopify/polaris'
 import { EditIcon, DeleteIcon, ViewIcon } from '@shopify/polaris-icons'
 import { supabase } from '@/lib/supabase'
-import { buildShortUrl } from '@/lib/qrcode'
+import { buildShortUrl, generateQRCode } from '@/lib/qrcode'
 
 interface Link {
   id: string
@@ -37,6 +37,8 @@ export default function LinksPage() {
   const [loading, setLoading] = useState(true)
   const [selectedLink, setSelectedLink] = useState<Link | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [generatingQR, setGeneratingQR] = useState<string | null>(null)
+  const [downloadingAll, setDownloadingAll] = useState(false)
 
   useEffect(() => {
     fetchLinks()
@@ -107,6 +109,52 @@ export default function LinksPage() {
     }
   }
 
+  const generateQRCodeForLink = async (link: Link) => {
+    try {
+      setGeneratingQR(link.id)
+      const shortUrl = buildShortUrl(link.code)
+      const qrCode = await generateQRCode(shortUrl)
+      
+      // Create download link
+      const downloadLink = document.createElement('a')
+      downloadLink.href = qrCode
+      downloadLink.download = `qr-${link.code}.png`
+      downloadLink.click()
+    } catch (error) {
+      console.error('Failed to generate QR code:', error)
+    } finally {
+      setGeneratingQR(null)
+    }
+  }
+
+  const downloadAllQRCodes = async () => {
+    try {
+      setDownloadingAll(true)
+      
+      for (const link of links) {
+        try {
+          const shortUrl = buildShortUrl(link.code)
+          const qrCode = await generateQRCode(shortUrl)
+          
+          // Create download link
+          const downloadLink = document.createElement('a')
+          downloadLink.href = qrCode
+          downloadLink.download = `qr-${link.code}.png`
+          downloadLink.click()
+          
+          // Small delay between downloads to avoid overwhelming the browser
+          await new Promise(resolve => setTimeout(resolve, 200))
+        } catch (error) {
+          console.error(`Failed to generate QR code for ${link.code}:`, error)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to download all QR codes:', error)
+    } finally {
+      setDownloadingAll(false)
+    }
+  }
+
   const linksRows = links.map(link => [
     link.code,
     link.product_id,
@@ -128,6 +176,13 @@ export default function LinksPage() {
         }}
       />
       <Button 
+        size="slim"
+        onClick={() => generateQRCodeForLink(link)}
+        loading={generatingQR === link.id}
+      >
+        QR
+      </Button>
+      <Button 
         icon={EditIcon} 
         size="slim"
         onClick={() => toggleLinkStatus(link.id, link.active)}
@@ -144,7 +199,15 @@ export default function LinksPage() {
   ])
 
   return (
-    <Page title="Links">
+    <Page 
+      title="Links"
+      primaryAction={{
+        content: 'Download All QR Codes',
+        onAction: downloadAllQRCodes,
+        loading: downloadingAll,
+        disabled: links.length === 0
+      }}
+    >
       <Layout>
         <Layout.Section>
           <Card>
