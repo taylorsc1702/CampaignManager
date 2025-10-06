@@ -10,8 +10,7 @@ import {
   LinkIcon, 
   HashtagIcon,
   SettingsIcon,
-  PersonIcon,
-  ChartIcon
+  PersonIcon
 } from '@shopify/polaris-icons'
 
 export default function Navigation() {
@@ -40,7 +39,7 @@ export default function Navigation() {
     },
     {
       label: 'Analytics',
-      icon: ChartIcon,
+      icon: HashtagIcon,
       url: `/app/analytics?shop=${shop}`,
       selected: pathname === '/app/analytics'
     },
