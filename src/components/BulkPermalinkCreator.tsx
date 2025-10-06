@@ -15,7 +15,6 @@ import {
   Checkbox,
   Select,
   InlineError,
-  FileUpload,
   ProgressBar,
   Badge,
   Spinner
@@ -516,12 +515,20 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
     <BlockStack gap="400">
       <Text variant="headingMd" as="h3">CSV Upload</Text>
       
-      <FileUpload
-        label="Upload CSV File"
-        accept=".csv"
-        allowMultiple={false}
-        onDrop={handleFileUpload}
-      />
+      <div>
+        <Text variant="bodyMd" as="p" fontWeight="semibold">Upload CSV File</Text>
+        <input
+          type="file"
+          accept=".csv"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) {
+              handleFileUpload([file])
+            }
+          }}
+          style={{ marginTop: '8px' }}
+        />
+      </div>
       
       {csvFile && (
         <Banner tone="info">
