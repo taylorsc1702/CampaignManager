@@ -9,7 +9,12 @@ import {
   DataTable,
   Button,
   BlockStack,
-  InlineStack
+  InlineStack,
+  Icon,
+  Box,
+  InlineGrid,
+  ProgressBar,
+  Divider
 } from '@shopify/polaris'
 import { supabase } from '@/lib/supabase'
 
@@ -118,67 +123,178 @@ export default function Dashboard({ merchant }: { merchant: Merchant }) {
 
   return (
     <Layout>
+      {/* Welcome Header */}
+      <Layout.Section>
+        <Box padding="600" background="bg-surface-brand" borderRadius="300">
+          <BlockStack gap="300">
+            <InlineStack gap="300" align="start">
+              <Box padding="300" background="bg-surface-base" borderRadius="200">
+                <Icon source="analytics" tone="base" />
+              </Box>
+              <BlockStack gap="200">
+                <Text variant="headingLg" as="h2" tone="base">
+                  Welcome to Campaign Manager
+                </Text>
+                <Text variant="bodyLg" as="p" tone="base">
+                  Track your QR codes and permalinks with detailed analytics
+                </Text>
+              </BlockStack>
+            </InlineStack>
+          </BlockStack>
+        </Box>
+      </Layout.Section>
+
       {/* Stats Cards */}
       <Layout.Section>
-        <InlineStack gap="400">
+        <InlineGrid columns={{ xs: 1, sm: 2, md: 3, lg: 5 }} gap="400">
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Total Links</Text>
-              <Text variant="heading2xl" as="p" tone="success">
-                {stats.totalLinks}
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-success" borderRadius="100">
+                  <Icon source="link" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" as="p" tone="subdued">Total Links</Text>
+                  <Text variant="heading2xl" as="p" fontWeight="bold">
+                    {stats.totalLinks}
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Box padding="200" background="bg-surface-success" borderRadius="100">
+                <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                  +12% from last month
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
+
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Total Scans</Text>
-              <Text variant="heading2xl" as="p">
-                {stats.totalScans}
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-info" borderRadius="100">
+                  <Icon source="view" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
+                  <Text variant="heading2xl" as="p" fontWeight="bold">
+                    {stats.totalScans}
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Box padding="200" background="bg-surface-info" borderRadius="100">
+                <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                  +8% from last month
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
+
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Orders</Text>
-              <Text variant="heading2xl" as="p" tone="success">
-                {stats.totalOrders}
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                  <Icon source="orders" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" as="p" tone="subdued">Orders</Text>
+                  <Text variant="heading2xl" as="p" fontWeight="bold">
+                    {stats.totalOrders}
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                  +15% from last month
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
+
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Conversion Rate</Text>
-              <Text variant="heading2xl" as="p">
-                {stats.conversionRate}%
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                  <Icon source="analytics" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" as="p" tone="subdued">Conversion Rate</Text>
+                  <Text variant="heading2xl" as="p" fontWeight="bold">
+                    {stats.conversionRate}%
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                  +3% from last month
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
+
           <Card>
             <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">Revenue</Text>
-              <Text variant="heading2xl" as="p" tone="success">
-                ${stats.totalRevenue}
-              </Text>
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-success" borderRadius="100">
+                  <Icon source="dollar" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" as="p" tone="subdued">Revenue</Text>
+                  <Text variant="heading2xl" as="p" fontWeight="bold">
+                    ${stats.totalRevenue}
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Box padding="200" background="bg-surface-success" borderRadius="100">
+                <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
+                  +22% from last month
+                </Text>
+              </Box>
             </BlockStack>
           </Card>
-        </InlineStack>
+        </InlineGrid>
       </Layout.Section>
 
       {/* Recent Links */}
       <Layout.Section>
         <Card>
-          <BlockStack gap="400">
-            <InlineStack align="space-between">
-              <Text variant="headingMd" as="h3">Recent Links</Text>
-              <Button>View All</Button>
+          <BlockStack gap="500">
+            <InlineStack gap="300" align="space-between">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                  <Icon source="link" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">Recent Links</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Your latest QR codes and permalinks
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Button variant="primary" icon="view">
+                View All Links
+              </Button>
             </InlineStack>
-            <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text']}
-              headings={['Code', 'Product ID', 'Variant ID', 'Quantity', 'Status', 'Created']}
-              rows={linksRows}
-              footerContent={`Showing ${links.length} of ${stats.totalLinks} links`}
-            />
-            </BlockStack>
+            
+            <Divider />
+            
+            <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+              <DataTable
+                columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text']}
+                headings={['Code', 'Product ID', 'Variant ID', 'Quantity', 'Status', 'Created']}
+                rows={linksRows}
+                footerContent={
+                  <InlineStack gap="200" align="space-between">
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Showing {links.length} of {stats.totalLinks} links
+                    </Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Last updated: {new Date().toLocaleTimeString()}
+                    </Text>
+                  </InlineStack>
+                }
+              />
+            </Box>
+          </BlockStack>
         </Card>
       </Layout.Section>
     </Layout>

@@ -13,7 +13,11 @@ import {
   Badge,
   ButtonGroup,
   Modal,
-  TextContainer
+  TextContainer,
+  Icon,
+  Box,
+  Divider,
+  InlineGrid
 } from '@shopify/polaris'
 import { EditIcon, DeleteIcon, ViewIcon } from '@shopify/polaris-icons'
 import { supabase } from '@/lib/supabase'
@@ -201,28 +205,153 @@ export default function LinksPage() {
   return (
     <Page 
       title="Links"
+      subtitle="Manage your QR codes and permalinks"
       primaryAction={{
         content: 'Download All QR Codes',
         onAction: downloadAllQRCodes,
         loading: downloadingAll,
-        disabled: links.length === 0
+        disabled: links.length === 0,
+        icon: 'download'
       }}
+      secondaryActions={[
+        {
+          content: 'Create New Link',
+          onAction: () => {},
+          icon: 'add'
+        }
+      ]}
     >
       <Layout>
+        {/* Header Section */}
+        <Layout.Section>
+          <Box padding="600" background="bg-surface-brand" borderRadius="300">
+            <BlockStack gap="300">
+              <InlineStack gap="300" align="start">
+                <Box padding="300" background="bg-surface-base" borderRadius="200">
+                  <Icon source="link" tone="base" />
+                </Box>
+                <BlockStack gap="200">
+                  <Text variant="headingLg" as="h2" tone="base">
+                    Links Management
+                  </Text>
+                  <Text variant="bodyLg" as="p" tone="base">
+                    Create, manage, and track your QR codes and permalinks
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </BlockStack>
+          </Box>
+        </Layout.Section>
+
+        {/* Stats Cards */}
+        <Layout.Section>
+          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-success" borderRadius="100">
+                    <Icon source="link" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Links</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {links.length}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-info" borderRadius="100">
+                    <Icon source="view" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Active Links</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {links.filter(l => l.active).length}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                    <Icon source="analytics" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {links.reduce((sum, link) => sum + (link.scans_count || 0), 0)}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-critical" borderRadius="100">
+                    <Icon source="orders" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Orders</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {links.reduce((sum, link) => sum + (link.orders_count || 0), 0)}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </InlineGrid>
+        </Layout.Section>
+
+        {/* Links Table */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between">
-                <Text variant="headingMd" as="h3">All Links</Text>
-                <Button variant="primary">Create New Link</Button>
+            <BlockStack gap="500">
+              <InlineStack gap="300" align="space-between">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                    <Icon source="list" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="headingMd" as="h3">All Links</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Manage and track your QR codes and permalinks
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Button variant="primary" icon="add">
+                  Create New Link
+                </Button>
               </InlineStack>
               
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
-                headings={['Code', 'Product ID', 'Variant ID', 'Quantity', 'Discount', 'Status', 'URL', 'Created', 'Actions']}
-                rows={linksRows}
-                footerContent={`Showing ${links.length} links`}
-              />
+              <Divider />
+              
+              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                <DataTable
+                  columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
+                  headings={['Code', 'Product ID', 'Variant ID', 'Quantity', 'Discount', 'Status', 'URL', 'Created', 'Actions']}
+                  rows={linksRows}
+                  footerContent={
+                    <InlineStack gap="200" align="space-between">
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Showing {links.length} links
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Last updated: {new Date().toLocaleTimeString()}
+                      </Text>
+                    </InlineStack>
+                  }
+                />
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>

@@ -15,7 +15,11 @@ import {
   Modal,
   TextContainer,
   FormLayout,
-  TextField
+  TextField,
+  Icon,
+  Box,
+  Divider,
+  InlineGrid
 } from '@shopify/polaris'
 import { EditIcon, DeleteIcon, PlusIcon } from '@shopify/polaris-icons'
 import { supabase } from '@/lib/supabase'
@@ -215,6 +219,7 @@ export default function CampaignsPage() {
   return (
     <Page 
       title="Campaigns"
+      subtitle="Organize your marketing campaigns with UTM tracking"
       primaryAction={{
         content: 'Create Campaign',
         icon: PlusIcon,
@@ -222,19 +227,120 @@ export default function CampaignsPage() {
       }}
     >
       <Layout>
+        {/* Header Section */}
+        <Layout.Section>
+          <Box padding="600" background="bg-surface-brand" borderRadius="300">
+            <BlockStack gap="300">
+              <InlineStack gap="300" align="start">
+                <Box padding="300" background="bg-surface-base" borderRadius="200">
+                  <Icon source="hashtag" tone="base" />
+                </Box>
+                <BlockStack gap="200">
+                  <Text variant="headingLg" as="h2" tone="base">
+                    Campaign Management
+                  </Text>
+                  <Text variant="bodyLg" as="p" tone="base">
+                    Create and organize marketing campaigns with UTM parameter tracking
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </BlockStack>
+          </Box>
+        </Layout.Section>
+
+        {/* Stats Cards */}
+        <Layout.Section>
+          <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-success" borderRadius="100">
+                    <Icon source="hashtag" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Campaigns</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {campaigns.length}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-info" borderRadius="100">
+                    <Icon source="link" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Total Links</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {campaigns.reduce((sum, campaign) => sum + (campaign.links_count || 0), 0)}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
+                    <Icon source="analytics" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="bodyMd" as="p" tone="subdued">Active Campaigns</Text>
+                    <Text variant="headingLg" as="p" fontWeight="bold">
+                      {campaigns.filter(c => c.links_count && c.links_count > 0).length}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </InlineGrid>
+        </Layout.Section>
+
+        {/* Campaigns Table */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between">
-                <Text variant="headingMd" as="h3">All Campaigns</Text>
+            <BlockStack gap="500">
+              <InlineStack gap="300" align="space-between">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                    <Icon source="list" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="headingMd" as="h3">All Campaigns</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      Manage your marketing campaigns and UTM parameters
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                <Button variant="primary" icon="add">
+                  Create Campaign
+                </Button>
               </InlineStack>
               
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
-                headings={['Name', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Term', 'UTM Content', 'Created', 'Actions']}
-                rows={campaignsRows}
-                footerContent={`Showing ${campaigns.length} campaigns`}
-              />
+              <Divider />
+              
+              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                <DataTable
+                  columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
+                  headings={['Name', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Term', 'UTM Content', 'Created', 'Actions']}
+                  rows={campaignsRows}
+                  footerContent={
+                    <InlineStack gap="200" align="space-between">
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Showing {campaigns.length} campaigns
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Last updated: {new Date().toLocaleTimeString()}
+                      </Text>
+                    </InlineStack>
+                  }
+                />
+              </Box>
             </BlockStack>
           </Card>
         </Layout.Section>
