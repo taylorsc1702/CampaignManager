@@ -202,7 +202,9 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
   }
 
   const previewCSV = (content: string) => {
+    console.log('previewCSV called with content:', content)
     const lines = content.trim().split('\n')
+    console.log('Lines:', lines)
     if (lines.length === 0) return
 
     const preview = []
@@ -214,6 +216,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
     if (hasHeaders && lines.length > 0) {
       headers = parseCSVLine(lines[0])
       startIndex = 1
+      console.log('Headers parsed:', headers)
     }
 
     // Process data rows
@@ -267,6 +270,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
       preview.push(row)
     }
     
+    console.log('Final preview:', preview)
     setCsvPreview(preview)
   }
 
