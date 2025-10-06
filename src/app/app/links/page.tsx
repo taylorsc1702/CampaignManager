@@ -27,9 +27,11 @@ interface Link {
   id: string
   code: string
   product_id: string
+  product_handle: string
   variant_id: string
   quantity: number
   discount_code?: string
+  permalink_type: 'product' | 'cart'
   active: boolean
   created_at: string
   scans_count?: number
@@ -161,8 +163,11 @@ export default function LinksPage() {
 
   const linksRows = links.map(link => [
     link.code,
-    link.product_id,
+    link.product_handle,
     link.variant_id,
+    <Badge tone={link.permalink_type === 'product' ? 'success' : 'info'}>
+      {link.permalink_type === 'product' ? 'Product' : 'Cart'}
+    </Badge>,
     link.quantity.toString(),
     link.discount_code || '-',
     <Badge tone={link.active ? 'success' : 'critical'}>
@@ -337,8 +342,8 @@ export default function LinksPage() {
               
               <Box padding="300" background="bg-surface-secondary" borderRadius="200">
                 <DataTable
-                  columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
-                  headings={['Code', 'Product ID', 'Variant ID', 'Quantity', 'Discount', 'Status', 'URL', 'Created', 'Actions']}
+                  columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
+                  headings={['Code', 'Product Handle', 'Variant ID', 'Type', 'Quantity', 'Discount', 'Status', 'URL', 'Created', 'Actions']}
                   rows={linksRows}
                   footerContent={
                     <InlineStack gap="200" align="space-between">

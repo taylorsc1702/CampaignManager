@@ -150,8 +150,15 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
       const code = generateShortCode()
       setLinkCode(code)
 
-      // Build target URL (Shopify cart URL)
-      const targetUrl = `https://${merchant.shop_domain}/cart/${formData.variantId}:${formData.quantity}`
+      // Get product handle from selected product
+      const productHandle = selectedProduct?.handle
+      if (!productHandle) {
+        setError('Product handle not found')
+        return
+      }
+
+      // Build target URL (Shopify product permalink with variant)
+      const targetUrl = `https://${merchant.shop_domain}/products/${productHandle}?variant=${formData.variantId}`
 
       // Demo mode - skip database operations
       const isDemo = merchant.id === 'demo-merchant'
@@ -188,6 +195,7 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
             merchant_id: merchant.id,
             code: code,
             product_id: formData.productId,
+            product_handle: productHandle,
             variant_id: formData.variantId,
             quantity: parseInt(formData.quantity),
             discount_code: discountCode || null,
@@ -197,6 +205,7 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
             utm_term: formData.utmTerm || null,
             utm_content: formData.utmContent || null,
             target_url: targetUrl,
+            permalink_type: 'product',
             active: true
           })
 

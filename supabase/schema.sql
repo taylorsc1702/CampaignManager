@@ -32,6 +32,7 @@ CREATE TABLE links (
     campaign_id UUID REFERENCES campaigns(id) ON DELETE SET NULL,
     code TEXT UNIQUE NOT NULL,
     product_id TEXT NOT NULL,
+    product_handle TEXT NOT NULL,
     variant_id TEXT NOT NULL,
     quantity INTEGER DEFAULT 1,
     discount_code TEXT,
@@ -41,6 +42,7 @@ CREATE TABLE links (
     utm_term TEXT,
     utm_content TEXT,
     target_url TEXT NOT NULL,
+    permalink_type TEXT DEFAULT 'product' CHECK (permalink_type IN ('product', 'cart')),
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

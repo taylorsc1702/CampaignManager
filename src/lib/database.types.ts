@@ -72,6 +72,7 @@ export interface Database {
           campaign_id?: string
           code: string
           product_id: string
+          product_handle: string
           variant_id: string
           quantity: number
           discount_code?: string
@@ -81,6 +82,7 @@ export interface Database {
           utm_term?: string
           utm_content?: string
           target_url: string
+          permalink_type: 'product' | 'cart'
           active: boolean
           created_at: string
           updated_at: string
@@ -91,6 +93,7 @@ export interface Database {
           campaign_id?: string
           code: string
           product_id: string
+          product_handle: string
           variant_id: string
           quantity: number
           discount_code?: string
@@ -100,6 +103,7 @@ export interface Database {
           utm_term?: string
           utm_content?: string
           target_url: string
+          permalink_type?: 'product' | 'cart'
           active?: boolean
           created_at?: string
           updated_at?: string
@@ -110,6 +114,7 @@ export interface Database {
           campaign_id?: string
           code?: string
           product_id?: string
+          product_handle?: string
           variant_id?: string
           quantity?: number
           discount_code?: string
@@ -119,6 +124,7 @@ export interface Database {
           utm_term?: string
           utm_content?: string
           target_url?: string
+          permalink_type?: 'product' | 'cart'
           active?: boolean
           created_at?: string
           updated_at?: string

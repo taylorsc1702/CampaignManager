@@ -149,6 +149,7 @@ async function processPermalinksAsync(
             campaign_id: permalink.campaign_id || null,
             code,
             product_id: 'bulk_permalink', // Special identifier for permalinks
+            product_handle: 'bulk_permalink', // Special identifier for permalinks
             variant_id: 'bulk_permalink',
             quantity: 1,
             discount_code: discountCode,
@@ -158,6 +159,7 @@ async function processPermalinksAsync(
             utm_term: finalUtmTerm,
             utm_content: finalUtmContent,
             target_url: targetUrl.toString(),
+            permalink_type: 'product',
             active: permalink.active !== false
           })
 

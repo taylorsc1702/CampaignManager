@@ -60,6 +60,11 @@ export async function GET(
       redirectUrl.searchParams.set('discount', link.discount_code)
     }
 
+    // Add quantity for product permalinks (if not already in URL)
+    if (link.permalink_type === 'product' && link.quantity && !redirectUrl.searchParams.has('quantity')) {
+      redirectUrl.searchParams.set('quantity', link.quantity.toString())
+    }
+
     // Add UTM parameters
     const finalUtmSource = utmSource || link.utm_source
     const finalUtmMedium = utmMedium || link.utm_medium
