@@ -178,6 +178,34 @@ export default function AppPage() {
                 </div>
               </Card>
             </Layout.Section>
+            
+            <Layout.Section>
+              <Card>
+                <Text variant="headingMd" as="h3">🚀 NEW: Bulk Features Demo</Text>
+                <div style={{ marginTop: '1rem' }}>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Bulk Permalinks:</strong> Create hundreds of permalinks at once with CSV upload
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Link Templates:</strong> Save reusable UTM parameter sets for consistency
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Bulk Operations:</strong> Track and manage all bulk operations with progress monitoring
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>CSV Import:</strong> Upload CSV files with automatic validation and processing
+                  </Text>
+                </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <Button 
+                    variant="primary" 
+                    onClick={() => setShowBulkPermalinkCreator(true)}
+                  >
+                    🚀 Try Bulk Permalinks (Demo)
+                  </Button>
+                </div>
+              </Card>
+            </Layout.Section>
           </Layout>
           
           {showLinkCreator && (
@@ -188,6 +216,39 @@ export default function AppPage() {
                 plan: 'starter'
               }}
               onClose={() => setShowLinkCreator(false)}
+            />
+          )}
+          
+          {showBulkPermalinkCreator && (
+            <BulkPermalinkCreator
+              merchant={{
+                id: 'demo-merchant',
+                shop_domain: 'demo-shop.myshopify.com',
+                plan: 'starter'
+              }}
+              onClose={() => setShowBulkPermalinkCreator(false)}
+            />
+          )}
+          
+          {showBulkOperationsManager && (
+            <BulkOperationsManager
+              merchant={{
+                id: 'demo-merchant',
+                shop_domain: 'demo-shop.myshopify.com',
+                plan: 'starter'
+              }}
+              onClose={() => setShowBulkOperationsManager(false)}
+            />
+          )}
+          
+          {showLinkTemplateManager && (
+            <LinkTemplateManager
+              merchant={{
+                id: 'demo-merchant',
+                shop_domain: 'demo-shop.myshopify.com',
+                plan: 'starter'
+              }}
+              onClose={() => setShowLinkTemplateManager(false)}
             />
           )}
         </Page>
@@ -250,6 +311,41 @@ export default function AppPage() {
       <Layout>
         <Layout.Section>
           <Dashboard merchant={merchant} />
+        </Layout.Section>
+        
+        {/* Demo Mode - Show Bulk Features */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text variant="headingLg" as="h2">🚀 Bulk Features Demo</Text>
+              <Text variant="bodyMd" as="p">
+                Here are the new bulk features you requested! (These will be in the main navigation when you set up your database)
+              </Text>
+              
+              <InlineStack gap="300">
+                <Button 
+                  variant="primary" 
+                  onClick={() => setShowBulkPermalinkCreator(true)}
+                >
+                  📋 Bulk Permalinks
+                </Button>
+                <Button 
+                  onClick={() => setShowLinkTemplateManager(true)}
+                >
+                  📝 Templates
+                </Button>
+                <Button 
+                  onClick={() => setShowBulkOperationsManager(true)}
+                >
+                  📊 Operations
+                </Button>
+              </InlineStack>
+              
+              <Text variant="bodySm" as="p" tone="subdued">
+                These features include CSV upload, template management, and bulk operation tracking.
+              </Text>
+            </BlockStack>
+          </Card>
         </Layout.Section>
       </Layout>
 
