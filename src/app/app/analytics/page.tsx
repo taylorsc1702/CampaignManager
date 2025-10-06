@@ -366,7 +366,7 @@ export default function AnalyticsPage() {
                         Showing top {analyticsData.topLinks.length} links
                       </Text>
                       <Text variant="bodySm" as="p" tone="subdued">
-                        Last updated: {new Date().toLocaleTimeString()}
+                        Real-time analytics
                       </Text>
                     </InlineStack>
                   }

@@ -335,7 +335,7 @@ export default function CampaignsPage() {
                         Showing {campaigns.length} campaigns
                       </Text>
                       <Text variant="bodySm" as="p" tone="subdued">
-                        Last updated: {new Date().toLocaleTimeString()}
+                        Live campaign tracking
                       </Text>
                     </InlineStack>
                   }

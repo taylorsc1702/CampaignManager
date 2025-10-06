@@ -288,7 +288,7 @@ export default function Dashboard({ merchant }: { merchant: Merchant }) {
                       Showing {links.length} of {stats.totalLinks} links
                     </Text>
                     <Text variant="bodySm" as="p" tone="subdued">
-                      Last updated: {new Date().toLocaleTimeString()}
+                      Live dashboard updates
                     </Text>
                   </InlineStack>
                 }

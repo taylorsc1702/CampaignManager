@@ -357,7 +357,7 @@ export default function LinksPage() {
                         Showing {links.length} links
                       </Text>
                       <Text variant="bodySm" as="p" tone="subdued">
-                        Last updated: {new Date().toLocaleTimeString()}
+                        Real-time tracking enabled
                       </Text>
                     </InlineStack>
                   }
