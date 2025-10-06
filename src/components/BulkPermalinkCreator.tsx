@@ -17,7 +17,11 @@ import {
   InlineError,
   ProgressBar,
   Badge,
-  Spinner
+  Spinner,
+  Icon,
+  Divider,
+  Box,
+  InlineGrid
 } from '@shopify/polaris'
 import { supabase } from '@/lib/supabase'
 import { buildShortUrl } from '@/lib/qrcode'
@@ -202,9 +206,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
   }
 
   const previewCSV = (content: string) => {
-    console.log('previewCSV called with content:', content)
     const lines = content.trim().split('\n')
-    console.log('Lines:', lines)
     if (lines.length === 0) return
 
     const preview = []
@@ -216,7 +218,6 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
     if (hasHeaders && lines.length > 0) {
       headers = parseCSVLine(lines[0])
       startIndex = 1
-      console.log('Headers parsed:', headers)
     }
 
     // Process data rows
@@ -270,7 +271,6 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
       preview.push(row)
     }
     
-    console.log('Final preview:', preview)
     setCsvPreview(preview)
   }
 
@@ -451,51 +451,100 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
   }
 
   const renderManualMode = () => (
-    <BlockStack gap="400">
-      <Text variant="headingMd" as="h3">Template & Campaign</Text>
-      
-      <InlineStack gap="400">
-        <div style={{ flex: 1 }}>
-          <Select
-            label="Template (optional)"
-            options={[
-              { label: 'No template', value: '' },
-              ...templates.map(t => ({ label: t.name, value: t.id }))
-            ]}
-            value={selectedTemplate}
-            onChange={setSelectedTemplate}
-          />
-        </div>
-        <div style={{ flex: 1 }}>
-          <Select
-            label="Campaign (optional)"
-            options={[
-              { label: 'No campaign', value: '' },
-              ...campaigns.map(c => ({ label: c.name, value: c.id }))
-            ]}
-            value={selectedCampaign}
-            onChange={setSelectedCampaign}
-          />
-        </div>
-      </InlineStack>
+    <BlockStack gap="500">
+      {/* Header Section */}
+      <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+        <InlineStack gap="300" align="start">
+          <Box padding="200" background="bg-surface-brand" borderRadius="100">
+            <Icon source="edit" tone="base" />
+          </Box>
+          <BlockStack gap="200">
+            <Text variant="headingMd" as="h3">Manual Entry</Text>
+            <Text variant="bodyMd" as="p" tone="subdued">
+              Create permalinks one by one with custom UTM parameters
+            </Text>
+          </BlockStack>
+        </InlineStack>
+      </Box>
 
-      <Text variant="headingMd" as="h3">Permalinks</Text>
+      {/* Template & Campaign Section */}
+      <Card>
+        <BlockStack gap="400">
+          <InlineStack gap="200" align="start">
+            <Box padding="200" background="bg-surface-brand" borderRadius="100">
+              <Icon source="settings" tone="base" />
+            </Box>
+            <BlockStack gap="100">
+              <Text variant="headingMd" as="h3">Template & Campaign</Text>
+              <Text variant="bodySm" as="p" tone="subdued">
+                Apply templates and campaigns to your permalinks (optional)
+              </Text>
+            </BlockStack>
+          </InlineStack>
+          
+          <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
+            <Select
+              label="Template (optional)"
+              helpText="Apply UTM parameters from a saved template"
+              options={[
+                { label: 'No template', value: '' },
+                ...templates.map(t => ({ label: t.name, value: t.id }))
+              ]}
+              value={selectedTemplate}
+              onChange={setSelectedTemplate}
+            />
+            <Select
+              label="Campaign (optional)"
+              helpText="Associate permalinks with a campaign"
+              options={[
+                { label: 'No campaign', value: '' },
+                ...campaigns.map(c => ({ label: c.name, value: c.id }))
+              ]}
+              value={selectedCampaign}
+              onChange={setSelectedCampaign}
+            />
+          </InlineGrid>
+        </BlockStack>
+      </Card>
+
+      {/* Permalinks Section */}
+      <Card>
+        <BlockStack gap="400">
+          <InlineStack gap="200" align="start">
+            <Box padding="200" background="bg-surface-brand" borderRadius="100">
+              <Icon source="link" tone="base" />
+            </Box>
+            <BlockStack gap="100">
+              <Text variant="headingMd" as="h3">Permalinks</Text>
+              <Text variant="bodySm" as="p" tone="subdued">
+                Add URLs and configure UTM parameters for each permalink
+              </Text>
+            </BlockStack>
+          </InlineStack>
       
-      {permalinks.map((permalink, index) => (
-        <Card key={index}>
-          <BlockStack gap="300">
-            <InlineStack align="space-between">
-              <Text variant="headingSm" as="h4">Permalink {index + 1}</Text>
-              {permalinks.length > 1 && (
-                <Button 
-                  variant="plain" 
-                  tone="critical"
-                  onClick={() => removePermalink(index)}
-                >
-                  Remove
-                </Button>
-              )}
-            </InlineStack>
+          {permalinks.map((permalink, index) => (
+            <Card key={index}>
+              <BlockStack gap="400">
+                <InlineStack align="space-between">
+                  <InlineStack gap="200" align="center">
+                    <Box padding="200" background="bg-surface-secondary" borderRadius="100">
+                      <Text variant="bodyMd" as="span" fontWeight="semibold">
+                        {index + 1}
+                      </Text>
+                    </Box>
+                    <Text variant="headingSm" as="h4">Permalink {index + 1}</Text>
+                  </InlineStack>
+                  {permalinks.length > 1 && (
+                    <Button 
+                      variant="plain" 
+                      tone="critical"
+                      icon="delete"
+                      onClick={() => removePermalink(index)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </InlineStack>
             
             <FormLayout>
               <TextField
@@ -582,155 +631,301 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
         </Card>
       ))}
 
-      <Button onClick={addPermalink} variant="plain">
-        Add Another Permalink
-      </Button>
+          <Button 
+            onClick={addPermalink} 
+            variant="plain"
+            icon="add"
+            fullWidth
+          >
+            <InlineStack gap="200" align="center">
+              <Icon source="add" tone="base" />
+              <Text variant="bodyMd" as="span">Add Another Permalink</Text>
+            </InlineStack>
+          </Button>
+        </BlockStack>
+      </Card>
     </BlockStack>
   )
 
   const renderCSVMode = () => (
-    <BlockStack gap="400">
-      <Text variant="headingMd" as="h3">CSV Upload</Text>
-      
-      <div>
-        <Text variant="bodyMd" as="p" fontWeight="semibold">Upload CSV File</Text>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => {
-            try {
-              const file = e.target.files?.[0]
-              if (file) {
-                handleFileUpload([file])
-              }
-            } catch (error) {
-              console.error('File upload error:', error)
-              setError('Failed to read file. Please try again.')
-            }
-          }}
-          style={{ 
-            marginTop: '8px',
-            padding: '8px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            width: '100%',
-            maxWidth: '300px'
-          }}
-        />
-        <Text variant="bodySm" as="p" tone="subdued" style={{ marginTop: '4px' }}>
-          Select a CSV file with columns: url, code, utm_source, utm_medium, utm_campaign
-        </Text>
-      </div>
-      
-      {csvFile && (
-        <Banner tone="info">
-          <Text variant="bodyMd" as="p">
-            File uploaded: {csvFile.name} ({csvFile.size} bytes)
-          </Text>
-        </Banner>
-      )}
+    <BlockStack gap="500">
+      {/* Header Section */}
+      <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+        <InlineStack gap="300" align="start">
+          <Box padding="200" background="bg-surface-brand" borderRadius="100">
+            <Icon source="upload" tone="base" />
+          </Box>
+          <BlockStack gap="200">
+            <Text variant="headingMd" as="h3">CSV Upload</Text>
+            <Text variant="bodyMd" as="p" tone="subdued">
+              Upload a CSV file to create multiple permalinks at once
+            </Text>
+          </BlockStack>
+        </InlineStack>
+      </Box>
 
-      <Checkbox
-        label="First row contains headers"
-        checked={hasHeaders}
-        onChange={setHasHeaders}
-      />
+      {/* File Upload Section */}
+      <Card>
+        <BlockStack gap="400">
+          <Text variant="headingSm" as="h4">Upload Your CSV File</Text>
+          
+          <Box 
+            padding="600" 
+            background="bg-surface-secondary" 
+            borderRadius="300"
+            borderWidth="025"
+            borderColor="border"
+            borderStyle="dashed"
+          >
+            <BlockStack gap="300" align="center">
+              <Box padding="300" background="bg-surface-brand" borderRadius="200">
+                <Icon source="upload" tone="base" />
+              </Box>
+              
+              <BlockStack gap="200" align="center">
+                <Text variant="bodyMd" as="p" fontWeight="semibold">
+                  {csvFile ? 'File Ready' : 'Choose CSV File'}
+                </Text>
+                <Text variant="bodySm" as="p" tone="subdued" alignment="center">
+                  {csvFile 
+                    ? `${csvFile.name} (${csvFile.size} bytes)`
+                    : 'Click to browse or drag and drop your CSV file'
+                  }
+                </Text>
+              </BlockStack>
+
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  try {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      handleFileUpload([file])
+                    }
+                  } catch (error) {
+                    console.error('File upload error:', error)
+                    setError('Failed to read file. Please try again.')
+                  }
+                }}
+                style={{ 
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  opacity: 0,
+                  cursor: 'pointer'
+                }}
+              />
+            </BlockStack>
+          </Box>
+
+          <Box padding="300" background="bg-surface-info" borderRadius="200">
+            <BlockStack gap="200">
+              <Text variant="bodySm" as="p" fontWeight="semibold">
+                📋 Expected CSV Format
+              </Text>
+              <Text variant="bodySm" as="p" tone="subdued">
+                Your CSV should have these columns: <strong>url, code, utm_source, utm_medium, utm_campaign</strong>
+              </Text>
+              <Text variant="bodySm" as="p" tone="subdued">
+                Optional columns: utm_term, utm_content, discount_code, discount_type, discount_value
+              </Text>
+            </BlockStack>
+          </Box>
+
+          <Checkbox
+            label="First row contains headers"
+            checked={hasHeaders}
+            onChange={setHasHeaders}
+          />
+        </BlockStack>
+      </Card>
 
       {csvPreview.length > 0 && (
         <Card>
           <BlockStack gap="400">
-            <Text variant="headingMd" as="h3">CSV Preview</Text>
-            <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-              headings={['URL', 'Code', 'UTM Source', 'UTM Medium', 'UTM Campaign']}
-              rows={csvPreview.map(row => [
-                row.url,
-                row.code,
-                row.utm_source,
-                row.utm_medium,
-                row.utm_campaign
-              ])}
-            />
+            <InlineStack gap="300" align="space-between">
+              <InlineStack gap="200" align="start">
+                <Box padding="200" background="bg-surface-success" borderRadius="100">
+                  <Icon source="view" tone="base" />
+                </Box>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">CSV Preview</Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    {csvPreview.length} row{csvPreview.length !== 1 ? 's' : ''} ready to process
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <Badge status="success">Ready</Badge>
+            </InlineStack>
+            
+            <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+              <DataTable
+                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+                headings={['URL', 'Code', 'UTM Source', 'UTM Medium', 'UTM Campaign']}
+                rows={csvPreview.map((row, index) => [
+                  <Text variant="bodyMd" as="span" fontWeight="medium">{row.url}</Text>,
+                  <Text variant="bodyMd" as="span">{row.code || 'Auto-generated'}</Text>,
+                  <Text variant="bodyMd" as="span">{row.utm_source || '-'}</Text>,
+                  <Text variant="bodyMd" as="span">{row.utm_medium || '-'}</Text>,
+                  <Text variant="bodyMd" as="span">{row.utm_campaign || '-'}</Text>
+                ])}
+              />
+            </Box>
           </BlockStack>
         </Card>
       )}
 
-      <Text variant="headingMd" as="h3">Template & Campaign</Text>
-      
-      <InlineStack gap="400">
-        <div style={{ flex: 1 }}>
-          <Select
-            label="Template (optional)"
-            options={[
-              { label: 'No template', value: '' },
-              ...templates.map(t => ({ label: t.name, value: t.id }))
-            ]}
-            value={selectedTemplate}
-            onChange={setSelectedTemplate}
-          />
-        </div>
-        <div style={{ flex: 1 }}>
-          <Select
-            label="Campaign (optional)"
-            options={[
-              { label: 'No campaign', value: '' },
-              ...campaigns.map(c => ({ label: c.name, value: c.id }))
-            ]}
-            value={selectedCampaign}
-            onChange={setSelectedCampaign}
-          />
-        </div>
-      </InlineStack>
+      <Card>
+        <BlockStack gap="400">
+          <InlineStack gap="200" align="start">
+            <Box padding="200" background="bg-surface-brand" borderRadius="100">
+              <Icon source="settings" tone="base" />
+            </Box>
+            <BlockStack gap="100">
+              <Text variant="headingMd" as="h3">Template & Campaign</Text>
+              <Text variant="bodySm" as="p" tone="subdued">
+                Apply templates and campaigns to your permalinks (optional)
+              </Text>
+            </BlockStack>
+          </InlineStack>
+          
+          <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
+            <Select
+              label="Template (optional)"
+              helpText="Apply UTM parameters from a saved template"
+              options={[
+                { label: 'No template', value: '' },
+                ...templates.map(t => ({ label: t.name, value: t.id }))
+              ]}
+              value={selectedTemplate}
+              onChange={setSelectedTemplate}
+            />
+            <Select
+              label="Campaign (optional)"
+              helpText="Associate permalinks with a campaign"
+              options={[
+                { label: 'No campaign', value: '' },
+                ...campaigns.map(c => ({ label: c.name, value: c.id }))
+              ]}
+              value={selectedCampaign}
+              onChange={setSelectedCampaign}
+            />
+          </InlineGrid>
+        </BlockStack>
+      </Card>
     </BlockStack>
   )
 
   const renderOperationStatus = () => {
     if (!operation) return null
 
+    const getStatusIcon = (status: string) => {
+      switch (status) {
+        case 'processing': return 'spinner'
+        case 'completed': return 'checkmark'
+        case 'failed': return 'cancel'
+        default: return 'info'
+      }
+    }
+
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case 'processing': return 'bg-surface-info'
+        case 'completed': return 'bg-surface-success'
+        case 'failed': return 'bg-surface-critical'
+        default: return 'bg-surface-secondary'
+      }
+    }
+
     return (
       <Card>
-        <BlockStack gap="400">
-          <InlineStack align="space-between">
-            <Text variant="headingMd" as="h3">Operation Status</Text>
+        <BlockStack gap="500">
+          {/* Status Header */}
+          <InlineStack gap="300" align="space-between">
+            <InlineStack gap="200" align="start">
+              <Box padding="200" background={getStatusColor(operation.status)} borderRadius="100">
+                <Icon source={getStatusIcon(operation.status)} tone="base" />
+              </Box>
+              <BlockStack gap="100">
+                <Text variant="headingMd" as="h3">Operation Status</Text>
+                <Text variant="bodySm" as="p" tone="subdued">
+                  {operation.status === 'processing' && 'Creating your permalinks...'}
+                  {operation.status === 'completed' && 'All permalinks created successfully!'}
+                  {operation.status === 'failed' && 'Operation failed'}
+                </Text>
+              </BlockStack>
+            </InlineStack>
             {getStatusBadge(operation.status)}
           </InlineStack>
 
+          {/* Progress Section */}
           {operation.status === 'processing' && (
-            <ProgressBar
-              progress={(operation.processed_items / operation.total_items) * 100}
-              size="small"
-            />
+            <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+              <BlockStack gap="300">
+                <InlineStack align="space-between">
+                  <Text variant="bodyMd" as="p" fontWeight="semibold">Progress</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">
+                    {operation.processed_items} / {operation.total_items}
+                  </Text>
+                </InlineStack>
+                <ProgressBar
+                  progress={(operation.processed_items / operation.total_items) * 100}
+                  size="small"
+                />
+                {operation.failed_items > 0 && (
+                  <Text variant="bodySm" as="p" tone="critical">
+                    {operation.failed_items} failed
+                  </Text>
+                )}
+              </BlockStack>
+            </Box>
           )}
 
-          <Text variant="bodyMd" as="p">
-            Processed: {operation.processed_items} / {operation.total_items}
-            {operation.failed_items > 0 && ` (${operation.failed_items} failed)`}
-          </Text>
-
+          {/* Error Message */}
           {operation.error_message && (
             <Banner tone="critical">
               <Text variant="bodyMd" as="p">{operation.error_message}</Text>
             </Banner>
           )}
 
+          {/* Results Section */}
           {operation.status === 'completed' && operation.results && (
-            <BlockStack gap="300">
-              <Text variant="headingSm" as="h4">Results</Text>
-              <DataTable
-                columnContentTypes={['text', 'text', 'text']}
-                headings={['Code', 'Short URL', 'Status']}
-                rows={operation.results.permalinks?.slice(0, 10).map((p: any) => [
-                  p.code,
-                  p.url,
-                  p.success ? 'Success' : 'Failed'
-                ]) || []}
-              />
-              {operation.results.permalinks?.length > 10 && (
-                <Text variant="bodyMd" as="p">
-                  Showing first 10 results. Total: {operation.results.permalinks.length}
-                </Text>
-              )}
-            </BlockStack>
+            <Box padding="400" background="bg-surface-success" borderRadius="200">
+              <BlockStack gap="400">
+                <InlineStack gap="200" align="start">
+                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
+                    <Icon source="checkmark" tone="base" />
+                  </Box>
+                  <BlockStack gap="100">
+                    <Text variant="headingSm" as="h4">Results</Text>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      {operation.results.permalinks?.length || 0} permalinks created
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                
+                <DataTable
+                  columnContentTypes={['text', 'text', 'text']}
+                  headings={['Code', 'Short URL', 'Status']}
+                  rows={operation.results.permalinks?.slice(0, 10).map((p: any) => [
+                    <Text variant="bodyMd" as="span" fontWeight="medium">{p.code}</Text>,
+                    <Text variant="bodyMd" as="span">{p.url}</Text>,
+                    <Badge status={p.success ? 'success' : 'critical'}>
+                      {p.success ? 'Success' : 'Failed'}
+                    </Badge>
+                  ]) || []}
+                />
+                
+                {operation.results.permalinks?.length > 10 && (
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Showing first 10 results. Total: {operation.results.permalinks.length}
+                  </Text>
+                )}
+              </BlockStack>
+            </Box>
           )}
         </BlockStack>
       </Card>
@@ -766,21 +961,36 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
         {operation ? (
           renderOperationStatus()
         ) : (
-          <BlockStack gap="400">
-            <InlineStack gap="300">
-              <Button
-                variant={mode === 'manual' ? 'primary' : 'plain'}
-                onClick={() => setMode('manual')}
-              >
-                Manual Entry
-              </Button>
-              <Button
-                variant={mode === 'csv' ? 'primary' : 'plain'}
-                onClick={() => setMode('csv')}
-              >
-                CSV Upload
-              </Button>
-            </InlineStack>
+          <BlockStack gap="500">
+            {/* Tab Navigation */}
+            <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+              <InlineStack gap="200">
+                <Button
+                  variant={mode === 'manual' ? 'primary' : 'plain'}
+                  onClick={() => setMode('manual')}
+                  icon={mode === 'manual' ? 'checkmark' : undefined}
+                >
+                  <InlineStack gap="200" align="center">
+                    <Icon source="edit" tone={mode === 'manual' ? 'base' : 'subdued'} />
+                    <Text variant="bodyMd" as="span" fontWeight={mode === 'manual' ? 'semibold' : 'regular'}>
+                      Manual Entry
+                    </Text>
+                  </InlineStack>
+                </Button>
+                <Button
+                  variant={mode === 'csv' ? 'primary' : 'plain'}
+                  onClick={() => setMode('csv')}
+                  icon={mode === 'csv' ? 'checkmark' : undefined}
+                >
+                  <InlineStack gap="200" align="center">
+                    <Icon source="upload" tone={mode === 'csv' ? 'base' : 'subdued'} />
+                    <Text variant="bodyMd" as="span" fontWeight={mode === 'csv' ? 'semibold' : 'regular'}>
+                      CSV Upload
+                    </Text>
+                  </InlineStack>
+                </Button>
+              </InlineStack>
+            </Box>
 
             {mode === 'manual' ? renderManualMode() : renderCSVMode()}
           </BlockStack>
