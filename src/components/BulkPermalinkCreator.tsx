@@ -203,16 +203,70 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
 
   const previewCSV = (content: string) => {
     const lines = content.trim().split('\n')
-    const preview = lines.slice(0, 5).map(line => {
+    if (lines.length === 0) return
+
+    const preview = []
+    
+    // Parse headers if they exist
+    let headers: string[] = []
+    let startIndex = 0
+    
+    if (hasHeaders && lines.length > 0) {
+      headers = parseCSVLine(lines[0])
+      startIndex = 1
+    }
+
+    // Process data rows
+    for (let i = startIndex; i < Math.min(lines.length, 5); i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+
       const values = parseCSVLine(line)
-      return {
-        url: values[0] || '',
-        code: values[1] || '',
-        utm_source: values[2] || '',
-        utm_medium: values[3] || '',
-        utm_campaign: values[4] || ''
+      const row: any = {
+        url: '',
+        code: '',
+        utm_source: '',
+        utm_medium: '',
+        utm_campaign: ''
       }
-    })
+
+      if (hasHeaders && headers.length > 0) {
+        // Map by header names (same logic as API)
+        headers.forEach((header, index) => {
+          const value = values[index]?.trim()
+          if (value) {
+            const cleanHeader = header.toLowerCase().replace(/[^a-z_]/g, '')
+            switch (cleanHeader) {
+              case 'url':
+                row.url = value
+                break
+              case 'code':
+                row.code = value
+                break
+              case 'utmsource':
+                row.utm_source = value
+                break
+              case 'utmmedium':
+                row.utm_medium = value
+                break
+              case 'utmcampaign':
+                row.utm_campaign = value
+                break
+            }
+          }
+        })
+      } else {
+        // Map by position
+        if (values.length > 0) row.url = values[0] || ''
+        if (values.length > 1) row.code = values[1] || ''
+        if (values.length > 2) row.utm_source = values[2] || ''
+        if (values.length > 3) row.utm_medium = values[3] || ''
+        if (values.length > 4) row.utm_campaign = values[4] || ''
+      }
+
+      preview.push(row)
+    }
+    
     setCsvPreview(preview)
   }
 
