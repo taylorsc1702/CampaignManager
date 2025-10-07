@@ -1,34 +1,23 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Campaign Manager",
-  description: "Track QR codes and permalinks for your Shopify store",
-};
+export const metadata = {
+  title: 'CampaignLink - Shopify Permalink Manager',
+  description: 'Create and manage permalinks and QR codes for your Shopify store',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>CampaignLink</title>
+      </head>
+      <body>
         {children}
       </body>
     </html>
-  );
+  )
 }

@@ -1,27 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { 
   Page, 
-  Layout, 
   Card, 
-  DataTable,
-  Button,
-  BlockStack,
+  DataTable, 
+  Button, 
+  Badge, 
+  Text, 
+  BlockStack, 
   InlineStack,
-  Text,
-  Badge,
-  ButtonGroup,
-  Modal,
-  TextContainer,
   Icon,
   Box,
   Divider,
   InlineGrid
 } from '@shopify/polaris'
-import { EditIcon, DeleteIcon, ViewIcon } from '@shopify/polaris-icons'
+import { LinkIcon } from '@shopify/polaris-icons'
 import { supabase } from '@/lib/supabase'
-import { buildShortUrl, generateQRCode } from '@/lib/qrcode'
+import '@shopify/polaris/build/esm/styles.css'
 
 interface Link {
   id: string
@@ -30,21 +26,25 @@ interface Link {
   product_handle: string
   variant_id: string
   quantity: number
-  discount_code?: string
-  permalink_type: 'product' | 'cart' | 'custom'
   active: boolean
   created_at: string
+  permalink_type: 'product' | 'cart' | 'custom'
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
   scans_count?: number
   orders_count?: number
 }
 
-export default function LinksPage() {
+function LinksPageContent() {
   const [links, setLinks] = useState<Link[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedLink, setSelectedLink] = useState<Link | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [generatingQR, setGeneratingQR] = useState<string | null>(null)
-  const [downloadingAll, setDownloadingAll] = useState(false)
+  const [stats, setStats] = useState({
+    totalLinks: 0,
+    activeLinks: 0,
+    totalScans: 0,
+    totalOrders: 0
+  })
 
   useEffect(() => {
     fetchLinks()
@@ -52,362 +52,184 @@ export default function LinksPage() {
 
   const fetchLinks = async () => {
     try {
-      const urlParams = new URLSearchParams(window.location.search)
-      const shop = urlParams.get('shop')
+      const merchantId = '550e8400-e29b-41d4-a716-446655440000'
       
-      if (!shop) return
+      // Check if this is a demo merchant
+      const isDemo = merchantId === '550e8400-e29b-41d4-a716-446655440000'
+      
+      if (isDemo) {
+        // Set demo data
+        setLinks([])
+        setStats({
+          totalLinks: 0,
+          activeLinks: 0,
+          totalScans: 0,
+          totalOrders: 0
+        })
+        setLoading(false)
+        return
+      }
 
-      const { data: merchant } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('shop_domain', shop)
-        .single()
-
-      if (!merchant) return
-
-      const { data, error } = await supabase
+      // Fetch links
+      const { data: linksData, error: linksError } = await supabase
         .from('links')
         .select('*')
-        .eq('merchant_id', merchant.id)
+        .eq('merchant_id', merchantId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (linksError) throw linksError
 
-      setLinks(data || [])
+      // Fetch stats
+      const [
+        { count: totalLinks },
+        { count: activeLinks },
+        { count: totalScans },
+        { count: totalOrders }
+      ] = await Promise.all([
+        supabase.from('links').select('*', { count: 'exact', head: true }).eq('merchant_id', merchantId),
+        supabase.from('links').select('*', { count: 'exact', head: true }).eq('merchant_id', merchantId).eq('active', true),
+        supabase.from('scans').select('*', { count: 'exact', head: true }).eq('merchant_id', merchantId),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('merchant_id', merchantId)
+      ])
+
+      setLinks(linksData || [])
+      setStats({
+        totalLinks: totalLinks || 0,
+        activeLinks: activeLinks || 0,
+        totalScans: totalScans || 0,
+        totalOrders: totalOrders || 0
+      })
     } catch (error) {
       console.error('Failed to fetch links:', error)
+      setLinks([])
+      setStats({
+        totalLinks: 0,
+        activeLinks: 0,
+        totalScans: 0,
+        totalOrders: 0
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const toggleLinkStatus = async (linkId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('links')
-        .update({ active: !currentStatus })
-        .eq('id', linkId)
-
-      if (error) throw error
-
-      setLinks(prev => prev.map(link => 
-        link.id === linkId ? { ...link, active: !currentStatus } : link
-      ))
-    } catch (error) {
-      console.error('Failed to update link status:', error)
-    }
-  }
-
-  const deleteLink = async (linkId: string) => {
-    try {
-      const { error } = await supabase
-        .from('links')
-        .delete()
-        .eq('id', linkId)
-
-      if (error) throw error
-
-      setLinks(prev => prev.filter(link => link.id !== linkId))
-      setShowModal(false)
-      setSelectedLink(null)
-    } catch (error) {
-      console.error('Failed to delete link:', error)
-    }
-  }
-
-  const generateQRCodeForLink = async (link: Link) => {
-    try {
-      setGeneratingQR(link.id)
-      const shortUrl = buildShortUrl(link.code)
-      const qrCode = await generateQRCode(shortUrl)
-      
-      // Create download link
-      const downloadLink = document.createElement('a')
-      downloadLink.href = qrCode
-      downloadLink.download = `qr-${link.code}.png`
-      downloadLink.click()
-    } catch (error) {
-      console.error('Failed to generate QR code:', error)
-    } finally {
-      setGeneratingQR(null)
-    }
-  }
-
-  const downloadAllQRCodes = async () => {
-    try {
-      setDownloadingAll(true)
-      
-      for (const link of links) {
-        try {
-          const shortUrl = buildShortUrl(link.code)
-          const qrCode = await generateQRCode(shortUrl)
-          
-          // Create download link
-          const downloadLink = document.createElement('a')
-          downloadLink.href = qrCode
-          downloadLink.download = `qr-${link.code}.png`
-          downloadLink.click()
-          
-          // Small delay between downloads to avoid overwhelming the browser
-          await new Promise(resolve => setTimeout(resolve, 200))
-        } catch (error) {
-          console.error(`Failed to generate QR code for ${link.code}:`, error)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to download all QR codes:', error)
-    } finally {
-      setDownloadingAll(false)
-    }
-  }
-
   const linksRows = links.map(link => [
     link.code,
-    link.product_handle,
-    link.variant_id,
-    <Badge tone={
-      link.permalink_type === 'product' ? 'success' : 
-      link.permalink_type === 'cart' ? 'info' : 
-      'warning'
-    }>
-      {link.permalink_type === 'product' ? 'Product' : 
-       link.permalink_type === 'cart' ? 'Cart' : 
-       'Custom'}
-    </Badge>,
-    link.quantity.toString(),
-    link.discount_code || '-',
-    <Badge tone={link.active ? 'success' : 'critical'}>
+    link.product_handle || 'N/A',
+    <Badge key={`badge-${link.id}`} tone={link.active ? 'success' : 'critical'}>
       {link.active ? 'Active' : 'Inactive'}
     </Badge>,
-    buildShortUrl(link.code),
-    new Date(link.created_at).toLocaleDateString(),
-    <ButtonGroup>
-      <Button 
-        icon={ViewIcon} 
-        size="slim"
-        onClick={() => {
-          setSelectedLink(link)
-          setShowModal(true)
-        }}
-      />
-      <Button 
-        size="slim"
-        onClick={() => generateQRCodeForLink(link)}
-        loading={generatingQR === link.id}
-      >
-        QR
-      </Button>
-      <Button 
-        icon={EditIcon} 
-        size="slim"
-        onClick={() => toggleLinkStatus(link.id, link.active)}
-      />
-      <Button 
-        icon={DeleteIcon} 
-        size="slim" 
-        onClick={() => {
-          setSelectedLink(link)
-          setShowModal(true)
-        }}
-      />
-    </ButtonGroup>
+    <Badge key={`type-${link.id}`} tone="info">
+      {link.permalink_type}
+    </Badge>,
+    link.scans_count || 0,
+    link.orders_count || 0,
+    new Date(link.created_at).toLocaleDateString()
   ])
 
+  const headings = [
+    'Code',
+    'Product Handle',
+    'Status',
+    'Type',
+    'Scans',
+    'Orders',
+    'Created'
+  ]
+
   return (
-    <Page 
+    <Page
       title="Links"
-      subtitle="Manage your QR codes and permalinks"
+      subtitle="Manage your marketing links and track performance"
       primaryAction={{
-        content: 'Download All QR Codes',
-        onAction: downloadAllQRCodes,
-        loading: downloadingAll,
-        disabled: links.length === 0,
-        icon: 'download'
+        content: 'Create Link',
+        onAction: () => window.location.href = '/app'
       }}
       secondaryActions={[
         {
-          content: 'Create New Link',
-          onAction: () => {},
-          icon: 'add'
+          content: 'Bulk Upload',
+          onAction: () => window.location.href = '/app'
         }
       ]}
     >
-      <Layout>
+      <BlockStack gap="500">
         {/* Header Section */}
-        <Layout.Section>
-          <Box padding="600" background="bg-surface-brand" borderRadius="300">
-            <BlockStack gap="300">
-              <InlineStack gap="300" align="start">
-                <Box padding="300" background="bg-surface-base" borderRadius="200">
-                  <Icon source="link" tone="base" />
-                </Box>
-                <BlockStack gap="200">
-                  <Text variant="headingLg" as="h2" tone="base">
-                    Links Management
-                  </Text>
-                  <Text variant="bodyLg" as="p" tone="base">
-                    Create, manage, and track your QR codes and permalinks
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-            </BlockStack>
-          </Box>
-        </Layout.Section>
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" align="center">
+              <Icon source={LinkIcon} />
+              <Text variant="headingMd" as="h2">Link Management</Text>
+            </InlineStack>
+            <Text variant="bodyMd" as="p">
+              Create, manage, and track your marketing links. Monitor performance and optimize your campaigns.
+            </Text>
+          </BlockStack>
+        </Card>
 
-        {/* Stats Cards */}
-        <Layout.Section>
-          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-success" borderRadius="100">
-                    <Icon source="link" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Total Links</Text>
-                    <Text variant="headingLg" as="p" fontWeight="bold">
-                      {links.length}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-info" borderRadius="100">
-                    <Icon source="view" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Active Links</Text>
-                    <Text variant="headingLg" as="p" fontWeight="bold">
-                      {links.filter(l => l.active).length}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
-                    <Icon source="analytics" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
-                    <Text variant="headingLg" as="p" fontWeight="bold">
-                      {links.reduce((sum, link) => sum + (link.scans_count || 0), 0)}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-critical" borderRadius="100">
-                    <Icon source="orders" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Total Orders</Text>
-                    <Text variant="headingLg" as="p" fontWeight="bold">
-                      {links.reduce((sum, link) => sum + (link.orders_count || 0), 0)}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </InlineGrid>
-        </Layout.Section>
-
-        {/* Links Table */}
-        <Layout.Section>
+        {/* Stats Overview */}
+        <InlineGrid columns={{ xs: 2, sm: 4 }} gap="300">
           <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="300" align="space-between">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                    <Icon source="list" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="headingMd" as="h3">All Links</Text>
-                    <Text variant="bodySm" as="p" tone="subdued">
-                      Manage and track your QR codes and permalinks
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                <Button variant="primary" icon="add">
-                  Create New Link
-                </Button>
-              </InlineStack>
-              
-              <Divider />
-              
-              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                <DataTable
-                  columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']}
-                  headings={['Code', 'Product Handle', 'Variant ID', 'Type', 'Quantity', 'Discount', 'Status', 'URL', 'Created', 'Actions']}
-                  rows={linksRows}
-                  footerContent={
-                    <InlineStack gap="200" align="space-between">
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        Showing {links.length} links
-                      </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        Real-time tracking enabled
-                      </Text>
-                    </InlineStack>
-                  }
-                />
-              </Box>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{stats.totalLinks}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Total Links</Text>
             </BlockStack>
           </Card>
-        </Layout.Section>
-      </Layout>
-
-      <Modal
-        open={showModal}
-        onClose={() => {
-          setShowModal(false)
-          setSelectedLink(null)
-        }}
-        title="Link Details"
-        primaryAction={{
-          content: 'Delete Link',
-          destructive: true,
-          onAction: () => selectedLink && deleteLink(selectedLink.id)
-        }}
-        secondaryActions={[
-          {
-            content: 'Cancel',
-            onAction: () => {
-              setShowModal(false)
-              setSelectedLink(null)
-            }
-          }
-        ]}
-      >
-        {selectedLink && (
-          <Modal.Section>
-            <BlockStack gap="400">
-              <TextContainer>
-                <Text variant="headingMd" as="h3">Link Information</Text>
-                <p><strong>Code:</strong> {selectedLink.code}</p>
-                <p><strong>Product ID:</strong> {selectedLink.product_id}</p>
-                <p><strong>Variant ID:</strong> {selectedLink.variant_id}</p>
-                <p><strong>Quantity:</strong> {selectedLink.quantity}</p>
-                <p><strong>Discount Code:</strong> {selectedLink.discount_code || 'None'}</p>
-                <p><strong>Status:</strong> {selectedLink.active ? 'Active' : 'Inactive'}</p>
-                <p><strong>URL:</strong> {buildShortUrl(selectedLink.code)}</p>
-                <p><strong>Created:</strong> {new Date(selectedLink.created_at).toLocaleString()}</p>
-              </TextContainer>
+          <Card>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{stats.activeLinks}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Active Links</Text>
             </BlockStack>
-          </Modal.Section>
-        )}
-      </Modal>
+          </Card>
+          <Card>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{stats.totalScans}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{stats.totalOrders}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Total Orders</Text>
+            </BlockStack>
+          </Card>
+        </InlineGrid>
+
+        {/* Links Table */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" align="center">
+              <Icon source={LinkIcon} />
+              <Text variant="headingMd" as="h2">All Links</Text>
+            </InlineStack>
+            <Divider />
+            <DataTable
+              columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'numeric', 'text']}
+              headings={headings}
+              rows={linksRows}
+              footerContent={
+                <InlineStack align="space-between">
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Showing {links.length} links
+                  </Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Real-time tracking enabled
+                  </Text>
+                </InlineStack>
+              }
+            />
+          </BlockStack>
+        </Card>
+      </BlockStack>
     </Page>
   )
 }
+
+export default function LinksPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LinksPageContent />
+    </Suspense>
+  )
+}
+
+export const dynamic = 'force-dynamic'

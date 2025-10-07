@@ -1,374 +1,213 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { 
   Page, 
-  Layout, 
   Card, 
-  Button,
-  BlockStack,
+  Button, 
+  Badge, 
+  Text, 
+  BlockStack, 
   InlineStack,
-  Text,
-  Banner,
   Icon,
   Box,
   Divider,
-  InlineGrid,
-  Badge
+  InlineGrid
 } from '@shopify/polaris'
-import { supabase } from '@/lib/supabase'
-import CollaboratorManager from '@/components/CollaboratorManager'
+import { HashtagIcon } from '@shopify/polaris-icons'
+import '@shopify/polaris/build/esm/styles.css'
 
-interface Merchant {
+interface Collaborator {
   id: string
-  shop_domain: string
-  plan: string
+  email: string
+  role: 'owner' | 'admin' | 'member'
+  status: 'active' | 'pending' | 'inactive'
+  created_at: string
 }
 
-export default function TeamPage() {
-  const [merchant, setMerchant] = useState<Merchant | null>(null)
+function TeamPageContent() {
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCollaboratorManager, setShowCollaboratorManager] = useState(false)
+  const [merchant, setMerchant] = useState({
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    shop_domain: 'demo-shop.myshopify.com',
+    plan: 'pro'
+  })
 
   useEffect(() => {
-    fetchMerchant()
+    loadTeamData()
   }, [])
 
-  const fetchMerchant = async () => {
+  const loadTeamData = async () => {
     try {
-      setLoading(true)
-      
-      // Get shop from URL
-      const urlParams = new URLSearchParams(window.location.search)
-      const shop = urlParams.get('shop')
-      
-      if (!shop) {
-        setLoading(false)
-        return
-      }
-
-      // Demo mode - show demo merchant
-      if (shop === 'demo-shop.myshopify.com') {
-        setMerchant({
-          id: 'demo-merchant',
-          shop_domain: shop,
-          plan: 'growth'
-        })
-        setLoading(false)
-        return
-      }
-
-      // Real mode - fetch from database
-      try {
-        const { data, error } = await supabase
-          .from('merchants')
-          .select('*')
-          .eq('shop_domain', shop)
-          .single()
-
-        if (error && error.code === 'PGRST116') {
-          // Table doesn't exist yet - show demo mode
-          setMerchant({
-            id: 'demo-merchant',
-            shop_domain: shop,
-            plan: 'growth'
-          })
-        } else if (error) {
-          throw error
-        } else if (data) {
-          setMerchant(data)
-        }
-      } catch (dbError) {
-        // Database not set up yet - show demo mode
-        setMerchant({
-          id: 'demo-merchant',
-          shop_domain: shop,
-          plan: 'growth'
-        })
-      }
-    } catch (err) {
-      console.error('Error fetching merchant:', err)
+      // For demo purposes, set empty collaborators
+      setCollaborators([])
+    } catch (error) {
+      console.error('Error loading team data:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
-    return (
-      <Page title="Team">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <Text variant="bodyMd" as="p">Loading team information...</Text>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    )
-  }
-
-  if (!merchant) {
-    return (
-      <Page title="Team">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <Banner tone="critical">
-                <Text variant="bodyMd" as="p">
-                  No shop parameter found. Please access this page through the Shopify app.
-                </Text>
-              </Banner>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    )
-  }
-
   return (
-    <Page 
-      title="Team Management"
-      subtitle="Collaborate with your team on campaigns and analytics"
+    <Page
+      title="Team"
+      subtitle="Manage team members and collaboration settings"
       primaryAction={{
-        content: 'Manage Team',
-        onAction: () => setShowCollaboratorManager(true),
-        icon: 'add'
+        content: 'Invite Team Member',
+        onAction: () => console.log('Invite team member')
       }}
     >
-      <Layout>
+      <BlockStack gap="500">
         {/* Header Section */}
-        <Layout.Section>
-          <Box padding="600" background="bg-surface-brand" borderRadius="300">
-            <BlockStack gap="300">
-              <InlineStack gap="300" align="start">
-                <Box padding="300" background="bg-surface-base" borderRadius="200">
-                  <Icon source="person" tone="base" />
-                </Box>
-                <BlockStack gap="200">
-                  <Text variant="headingLg" as="h2" tone="base">
-                    Team Management
-                  </Text>
-                  <Text variant="bodyLg" as="p" tone="base">
-                    Collaborate with your team members on campaigns, analytics, and link management
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-            </BlockStack>
-          </Box>
-        </Layout.Section>
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" align="center">
+              <Icon source={HashtagIcon} />
+              <Text variant="headingMd" as="h2">Team Collaboration</Text>
+            </InlineStack>
+            <Text variant="bodyMd" as="p">
+              Invite team members to collaborate on your marketing campaigns. Manage permissions and access levels for your organization.
+            </Text>
+          </BlockStack>
+        </Card>
 
         {/* Current Plan Status */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-success" borderRadius="100">
-                  <Icon source="checkmark" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">Current Plan</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Your current subscription and team limits
-                  </Text>
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack align="space-between">
+              <Text variant="headingMd" as="h2">Current Plan</Text>
+              <Badge tone="success">Pro Plan Active</Badge>
+            </InlineStack>
+            <Text variant="bodyMd" as="p">
+              Your Pro plan includes team collaboration features, advanced analytics, and priority support.
+            </Text>
+          </BlockStack>
+        </Card>
+
+        {/* Plan Comparison */}
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Plan Features</Text>
+            <InlineGrid columns={{ xs: 3 }} gap="300">
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Starter</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">Perfect for individuals</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ 1 team member</Text>
+                    <Text variant="bodySm" as="p">✓ Basic analytics</Text>
+                    <Text variant="bodySm" as="p">✓ 100 links/month</Text>
+                  </BlockStack>
                 </BlockStack>
-              </InlineStack>
-              
-              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
-                <InlineStack gap="400" align="space-between">
-                  <BlockStack gap="200">
-                    <Text variant="bodyMd" as="p" fontWeight="semibold">
-                      {merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1)} Plan
-                    </Text>
-                    <Text variant="bodySm" as="p" tone="subdued">
-                      Active subscription
-                    </Text>
+              </Card>
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Growth</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">For growing teams</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ 5 team members</Text>
+                    <Text variant="bodySm" as="p">✓ Advanced analytics</Text>
+                    <Text variant="bodySm" as="p">✓ 1,000 links/month</Text>
                   </BlockStack>
-                  <Badge status="success">Active</Badge>
-                </InlineStack>
+                </BlockStack>
+              </Card>
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Pro</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">For large organizations</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ Unlimited team members</Text>
+                    <Text variant="bodySm" as="p">✓ Custom analytics</Text>
+                    <Text variant="bodySm" as="p">✓ Unlimited links</Text>
+                  </BlockStack>
+                </BlockStack>
+              </Card>
+            </InlineGrid>
+          </BlockStack>
+        </Card>
+
+        {/* Team Collaborators */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack align="space-between">
+              <Text variant="headingMd" as="h2">Team Collaborators</Text>
+              <Button>Invite Member</Button>
+            </InlineStack>
+            <Divider />
+            {collaborators.length === 0 ? (
+              <Box background="bg-surface-secondary" padding="400" borderRadius="200">
+                <BlockStack gap="200" align="center">
+                  <Text variant="bodyMd" as="p" alignment="center" tone="subdued">
+                    No team members yet
+                  </Text>
+                  <Text variant="bodySm" as="p" alignment="center" tone="subdued">
+                    Invite team members to start collaborating on your campaigns
+                  </Text>
+                  <Button>Invite Your First Team Member</Button>
+                </BlockStack>
               </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-
-        {/* Plan Features Grid */}
-        <Layout.Section>
-          <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-info" borderRadius="100">
-                    <Icon source="person" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" fontWeight="semibold">Starter</Text>
-                    <Text variant="bodySm" as="p" tone="subdued">1 user (just you)</Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-info" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    Perfect for individuals
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
-                    <Icon source="person" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" fontWeight="semibold">Growth</Text>
-                    <Text variant="bodySm" as="p" tone="subdued">Up to 3 collaborators</Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-warning" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    Great for small teams
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-critical" borderRadius="100">
-                    <Icon source="person" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" fontWeight="semibold">Pro</Text>
-                    <Text variant="bodySm" as="p" tone="subdued">Unlimited collaborators</Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-critical" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    For growing businesses
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-          </InlineGrid>
-        </Layout.Section>
-
-        {/* Team Management Section */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="300" align="space-between">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                    <Icon source="team" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="headingMd" as="h3">Team Collaborators</Text>
-                    <Text variant="bodySm" as="p" tone="subdued">
-                      Manage your team members and their access to the Campaign Manager app
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                <Button 
-                  variant="primary"
-                  icon="add"
-                  onClick={() => setShowCollaboratorManager(true)}
-                >
-                  Manage Team Members
-                </Button>
-              </InlineStack>
-              
-              <Divider />
-              
-              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                <Text variant="bodyMd" as="p">
-                  Collaborate with your marketing team to create and track QR codes and campaigns. 
-                  Invite team members, assign roles, and manage permissions to streamline your workflow.
-                </Text>
-              </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+            ) : (
+              <Text variant="bodyMd" as="p">Team members will be listed here</Text>
+            )}
+          </BlockStack>
+        </Card>
 
         {/* Role Permissions */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                  <Icon source="settings" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">Collaborator Roles</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Different permission levels for your team members
-                  </Text>
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Role Permissions</Text>
+            <InlineGrid columns={{ xs: 3 }} gap="300">
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Owner</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">Full access to all features</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ Create and manage links</Text>
+                    <Text variant="bodySm" as="p">✓ View all analytics</Text>
+                    <Text variant="bodySm" as="p">✓ Manage team members</Text>
+                    <Text variant="bodySm" as="p">✓ Billing and settings</Text>
+                  </BlockStack>
                 </BlockStack>
-              </InlineStack>
-              
-              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
-                <Box padding="400" background="bg-surface-success" borderRadius="200">
-                  <BlockStack gap="300">
-                    <InlineStack gap="200" align="start">
-                      <Box padding="200" background="bg-surface-base" borderRadius="100">
-                        <Icon source="crown" tone="base" />
-                      </Box>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">Owner</Text>
-                        <Text variant="bodySm" as="p" tone="subdued">Full access</Text>
-                      </BlockStack>
-                    </InlineStack>
-                    <Text variant="bodySm" as="p">
-                      Full access to all features, billing, and team management
-                    </Text>
+              </Card>
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Admin</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">Manage campaigns and team</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ Create and manage links</Text>
+                    <Text variant="bodySm" as="p">✓ View all analytics</Text>
+                    <Text variant="bodySm" as="p">✓ Invite team members</Text>
+                    <Text variant="bodySm" as="p">✗ Billing and settings</Text>
                   </BlockStack>
-                </Box>
-
-                <Box padding="400" background="bg-surface-warning" borderRadius="200">
-                  <BlockStack gap="300">
-                    <InlineStack gap="200" align="start">
-                      <Box padding="200" background="bg-surface-base" borderRadius="100">
-                        <Icon source="settings" tone="base" />
-                      </Box>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">Admin</Text>
-                        <Text variant="bodySm" as="p" tone="subdued">Management access</Text>
-                      </BlockStack>
-                    </InlineStack>
-                    <Text variant="bodySm" as="p">
-                      Can manage team members, create campaigns, and access analytics
-                    </Text>
+                </BlockStack>
+              </Card>
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Member</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">Create and manage links</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ Create and manage links</Text>
+                    <Text variant="bodySm" as="p">✓ View assigned analytics</Text>
+                    <Text variant="bodySm" as="p">✗ Invite team members</Text>
+                    <Text variant="bodySm" as="p">✗ Billing and settings</Text>
                   </BlockStack>
-                </Box>
-
-                <Box padding="400" background="bg-surface-info" borderRadius="200">
-                  <BlockStack gap="300">
-                    <InlineStack gap="200" align="start">
-                      <Box padding="200" background="bg-surface-base" borderRadius="100">
-                        <Icon source="person" tone="base" />
-                      </Box>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">Member</Text>
-                        <Text variant="bodySm" as="p" tone="subdued">Basic access</Text>
-                      </BlockStack>
-                    </InlineStack>
-                    <Text variant="bodySm" as="p">
-                      Can create links and QR codes, view basic analytics
-                    </Text>
-                  </BlockStack>
-                </Box>
-              </InlineGrid>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
-
-      {showCollaboratorManager && (
-        <CollaboratorManager
-          merchant={merchant}
-          onClose={() => setShowCollaboratorManager(false)}
-        />
-      )}
+                </BlockStack>
+              </Card>
+            </InlineGrid>
+          </BlockStack>
+        </Card>
+      </BlockStack>
     </Page>
   )
 }
 
+export default function TeamPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TeamPageContent />
+    </Suspense>
+  )
+}
+
+export const dynamic = 'force-dynamic'

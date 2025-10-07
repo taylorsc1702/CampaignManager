@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
 function parseCSVData(csvData: string, hasHeaders: boolean) {
   const lines = csvData.trim().split('\n')
-  const permalinks: any[] = []
+  const permalinks: Record<string, string>[] = []
   const errors: string[] = []
 
   // Flexible CSV format - supports any combination of these columns:
@@ -115,7 +115,7 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
     'utm_term', 'utm_content', 'discount_code', 'discount_type', 'discount_value'
   ]
 
-  let startIndex = hasHeaders ? 1 : 0
+  const startIndex = hasHeaders ? 1 : 0
   let headers: string[] = []
 
   if (hasHeaders && lines.length > 0) {
@@ -130,7 +130,7 @@ function parseCSVData(csvData: string, hasHeaders: boolean) {
       const values = parseCSVLine(line)
       
       // Create permalink object with defaults
-      const permalink: any = {
+      const permalink: Record<string, string | number> = {
         utm_term: '',
         utm_content: '',
         discount_code: '',

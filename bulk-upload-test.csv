@@ -1,0 +1,11 @@
+product_handle,utm_source,utm_medium,utm_campaign,utm_term,utm_content,discount_code,discount_type,discount_value
+demo-running-shoes,facebook,social,summer-sale-2024,running-shoes,carousel-ad,SUMMER20,percentage,20
+demo-t-shirt,instagram,social,summer-sale-2024,t-shirt,story-ad,SUMMER15,percentage,15
+demo-wireless-headphones,google,search,tech-campaign,headphones,search-ad,TECH10,percentage,10
+demo-fitness-tracker,email,email,newsletter-campaign,fitness,newsletter-banner,FITNESS25,percentage,25
+demo-running-shoes,tiktok,social,viral-campaign,sneakers,video-ad,SNEAKERS30,percentage,30
+demo-t-shirt,youtube,video,summer-sale-2024,apparel,pre-roll-ad,SUMMER20,percentage,20
+demo-wireless-headphones,facebook,social,tech-campaign,audio,feed-ad,TECH15,percentage,15
+demo-fitness-tracker,google,search,fitness-campaign,wearables,search-ad,FITNESS20,percentage,20
+demo-running-shoes,instagram,social,athletic-campaign,shoes,story-ad,ATHLETIC25,percentage,25
+demo-t-shirt,email,email,apparel-campaign,clothing,newsletter-banner,APPAREL10,percentage,10

@@ -52,6 +52,7 @@ export function generateShortCode(): string {
 export interface ShopifyProduct {
   id: string
   title: string
+  handle: string
   variants: ShopifyVariant[]
 }
 

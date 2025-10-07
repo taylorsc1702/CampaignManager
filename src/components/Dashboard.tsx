@@ -61,6 +61,23 @@ export default function Dashboard({ merchant }: { merchant: Merchant }) {
 
   const fetchDashboardData = async () => {
     try {
+      // Check if this is a demo merchant
+      const isDemo = merchant.id === '550e8400-e29b-41d4-a716-446655440000'
+      
+      if (isDemo) {
+        // Set demo data
+        setLinks([])
+        setStats({
+          totalLinks: 0,
+          totalScans: 0,
+          totalOrders: 0,
+          conversionRate: 0,
+          totalRevenue: 0
+        })
+        setLoading(false)
+        return
+      }
+
       // Fetch links with scan and order counts
       const { data: linksData, error: linksError } = await supabase
         .from('links')
@@ -105,6 +122,15 @@ export default function Dashboard({ merchant }: { merchant: Merchant }) {
       })
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
+      // Set empty data on error
+      setLinks([])
+      setStats({
+        totalLinks: 0,
+        totalScans: 0,
+        totalOrders: 0,
+        conversionRate: 0,
+        totalRevenue: 0
+      })
     } finally {
       setLoading(false)
     }

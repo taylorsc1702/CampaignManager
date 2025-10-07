@@ -61,6 +61,15 @@ export async function generateQRCodeSVG(
   }
 }
 
+export function generateShortCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
 export function buildShortUrl(code: string, domain?: string): string {
   const baseDomain = domain || process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost:3000'
   return `https://${baseDomain}/api/short/${code}`

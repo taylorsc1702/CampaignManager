@@ -1,72 +1,62 @@
 'use client'
 
-import { usePathname, useSearchParams } from 'next/navigation'
-import { 
-  Navigation as PolarisNavigation, 
-  Text 
-} from '@shopify/polaris'
-import { 
-  HomeIcon, 
-  LinkIcon, 
+import { usePathname } from 'next/navigation'
+import { Navigation as PolarisNavigation } from '@shopify/polaris'
+import {
+  HomeIcon,
+  LinkIcon,
   HashtagIcon,
   SettingsIcon,
-  PersonIcon
 } from '@shopify/polaris-icons'
 
 export default function Navigation() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const shop = searchParams.get('shop')
-
-  const navigationItems = [
-    {
-      label: 'Dashboard',
-      icon: HomeIcon,
-      url: `/app?shop=${shop}`,
-      selected: pathname === '/app'
-    },
-    {
-      label: 'Links',
-      icon: LinkIcon,
-      url: `/app/links?shop=${shop}`,
-      selected: pathname === '/app/links'
-    },
-    {
-      label: 'Campaigns',
-      icon: HashtagIcon,
-      url: `/app/campaigns?shop=${shop}`,
-      selected: pathname === '/app/campaigns'
-    },
-    {
-      label: 'Analytics',
-      icon: HashtagIcon,
-      url: `/app/analytics?shop=${shop}`,
-      selected: pathname === '/app/analytics'
-    },
-    {
-      label: 'Team',
-      icon: PersonIcon,
-      url: `/app/team?shop=${shop}`,
-      selected: pathname === '/app/team'
-    },
-    {
-      label: 'Settings',
-      icon: SettingsIcon,
-      url: `/app/settings?shop=${shop}`,
-      selected: pathname === '/app/settings'
-    }
-  ]
+  
+  // For Shopify embedded apps, we'll use simple navigation without shop params
+  const getHref = (path: string) => `/app${path}`
 
   return (
-    <PolarisNavigation location="/">
+    <PolarisNavigation location={pathname}>
       <PolarisNavigation.Section
-        items={navigationItems}
-        rollup={{
-          after: 3,
-          view: 'view',
-          hide: 'hide',
-          activePath: pathname,
-        }}
+        items={[
+          {
+            label: 'Dashboard',
+            icon: HomeIcon,
+            url: getHref(''),
+            exactMatch: true,
+            selected: pathname === '/app',
+          },
+          {
+            label: 'Links',
+            icon: LinkIcon,
+            url: getHref('/links'),
+            selected: pathname?.startsWith('/app/links'),
+          },
+          {
+            label: 'Campaigns',
+            icon: HashtagIcon,
+            url: getHref('/campaigns'),
+            selected: pathname?.startsWith('/app/campaigns'),
+          },
+          {
+            label: 'Analytics',
+            icon: HashtagIcon,
+            url: getHref('/analytics'),
+            selected: pathname?.startsWith('/app/analytics'),
+          },
+          {
+            label: 'Team',
+            icon: HashtagIcon,
+            url: getHref('/team'),
+            selected: pathname?.startsWith('/app/team'),
+          },
+          {
+            label: 'Settings',
+            icon: SettingsIcon,
+            url: getHref('/settings'),
+            selected: pathname?.startsWith('/app/settings'),
+          },
+        ]}
       />
     </PolarisNavigation>
   )

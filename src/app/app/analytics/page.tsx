@@ -1,381 +1,248 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { 
   Page, 
-  Layout, 
   Card, 
-  Text,
-  BlockStack,
+  DataTable, 
+  Button, 
+  Badge, 
+  Text, 
+  BlockStack, 
   InlineStack,
-  Select,
-  DatePicker,
-  DataTable,
   Icon,
   Box,
   Divider,
   InlineGrid,
-  Badge,
   ProgressBar
 } from '@shopify/polaris'
+import { HashtagIcon } from '@shopify/polaris-icons'
 import { supabase } from '@/lib/supabase'
+import '@shopify/polaris/build/esm/styles.css'
 
 interface AnalyticsData {
   totalScans: number
   totalOrders: number
   conversionRate: number
   totalRevenue: number
-  scansByDay: Array<{ date: string; scans: number }>
   topLinks: Array<{
     code: string
     scans: number
     orders: number
-    revenue: number
+    conversionRate: number
   }>
 }
 
-export default function AnalyticsPage() {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
+function AnalyticsPageContent() {
+  const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalScans: 0,
     totalOrders: 0,
     conversionRate: 0,
     totalRevenue: 0,
-    scansByDay: [],
     topLinks: []
   })
   const [loading, setLoading] = useState(true)
-  const [dateRange, setDateRange] = useState({
-    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    end: new Date()
-  })
 
   useEffect(() => {
     fetchAnalytics()
-  }, [dateRange])
+  }, [])
 
   const fetchAnalytics = async () => {
     try {
-      const urlParams = new URLSearchParams(window.location.search)
-      const shop = urlParams.get('shop')
+      const merchantId = '550e8400-e29b-41d4-a716-446655440000'
       
-      if (!shop) return
+      // Check if this is a demo merchant
+      const isDemo = merchantId === '550e8400-e29b-41d4-a716-446655440000'
+      
+      if (isDemo) {
+        // Set demo data
+        setAnalytics({
+          totalScans: 0,
+          totalOrders: 0,
+          conversionRate: 0,
+          totalRevenue: 0,
+          topLinks: []
+        })
+        setLoading(false)
+        return
+      }
 
-      const { data: merchant } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('shop_domain', shop)
-        .single()
+      // Fetch analytics data
+      const [
+        { count: totalScans },
+        { count: totalOrders },
+        { data: revenueData }
+      ] = await Promise.all([
+        supabase.from('scans').select('*', { count: 'exact', head: true }).eq('merchant_id', merchantId),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('merchant_id', merchantId),
+        supabase.from('orders').select('total').eq('merchant_id', merchantId)
+      ])
 
-      if (!merchant) return
+      const totalRevenue = revenueData?.reduce((sum, order) => sum + parseFloat(order.total.toString()), 0) || 0
+      const conversionRate = (totalScans && totalScans > 0 && totalOrders) ? (totalOrders / totalScans) * 100 : 0
 
-      // Fetch scans data
-      const { data: scansData } = await supabase
-        .from('scans')
-        .select('*')
-        .eq('merchant_id', merchant.id)
-        .gte('timestamp', dateRange.start.toISOString())
-        .lte('timestamp', dateRange.end.toISOString())
+      // Fetch top performing links
+      const { data: topLinksData } = await supabase
+        .from('links')
+        .select(`
+          code,
+          scans!inner(count),
+          orders!inner(count)
+        `)
+        .eq('merchant_id', merchantId)
+        .order('scans.count', { ascending: false })
+        .limit(5)
 
-      // Fetch orders data
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('merchant_id', merchant.id)
-        .gte('created_at', dateRange.start.toISOString())
-        .lte('created_at', dateRange.end.toISOString())
+      const topLinks = topLinksData?.map(link => ({
+        code: link.code,
+        scans: link.scans?.count || 0,
+        orders: link.orders?.count || 0,
+        conversionRate: link.scans?.count > 0 ? (link.orders?.count / link.scans.count) * 100 : 0
+      })) || []
 
-      const totalScans = scansData?.length || 0
-      const totalOrders = ordersData?.length || 0
-      const conversionRate = totalScans > 0 ? (totalOrders / totalScans) * 100 : 0
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + parseFloat(order.total.toString()), 0) || 0
-
-      // Group scans by day
-      const scansByDay = scansData?.reduce((acc: Array<{ date: string; scans: number }>, scan) => {
-        const date = new Date(scan.timestamp).toISOString().split('T')[0]
-        const existing = acc.find((item: { date: string; scans: number }) => item.date === date)
-        if (existing) {
-          existing.scans++
-        } else {
-          acc.push({ date, scans: 1 })
-        }
-        return acc
-      }, [] as Array<{ date: string; scans: number }>) || []
-
-      // Get top performing links
-      const linkStats = scansData?.reduce((acc, scan) => {
-        if (!acc[scan.link_id]) {
-          acc[scan.link_id] = { scans: 0, orders: 0, revenue: 0 }
-        }
-        acc[scan.link_id].scans++
-        return acc
-      }, {} as Record<string, { scans: number; orders: number; revenue: number }>) || {}
-
-      // Add order data to link stats
-      ordersData?.forEach(order => {
-        if (order.link_id && linkStats[order.link_id]) {
-          linkStats[order.link_id].orders++
-          linkStats[order.link_id].revenue += parseFloat(order.total.toString())
-        }
-      })
-
-      const topLinks = Object.entries(linkStats)
-        .map(([linkId, stats]) => ({
-          code: linkId, // This should be the actual link code, but we'll use ID for now
-          scans: (stats as { scans: number; orders: number; revenue: number }).scans,
-          orders: (stats as { scans: number; orders: number; revenue: number }).orders,
-          revenue: (stats as { scans: number; orders: number; revenue: number }).revenue
-        }))
-        .sort((a, b) => b.scans - a.scans)
-        .slice(0, 10)
-
-      setAnalyticsData({
-        totalScans,
-        totalOrders,
+      setAnalytics({
+        totalScans: totalScans || 0,
+        totalOrders: totalOrders || 0,
         conversionRate: Math.round(conversionRate * 100) / 100,
         totalRevenue: Math.round(totalRevenue * 100) / 100,
-        scansByDay,
         topLinks
       })
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
+      setAnalytics({
+        totalScans: 0,
+        totalOrders: 0,
+        conversionRate: 0,
+        totalRevenue: 0,
+        topLinks: []
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const topLinksRows = analyticsData.topLinks.map(link => [
+  const topLinksRows = analytics.topLinks.map((link, index) => [
+    `#${index + 1}`,
     link.code,
-    link.scans.toString(),
-    link.orders.toString(),
-    `$${link.revenue.toFixed(2)}`
+    link.scans,
+    link.orders,
+    `${link.conversionRate.toFixed(1)}%`
   ])
 
-  return (
-    <Page 
-      title="Analytics"
-      subtitle="Track performance and insights for your campaigns"
-    >
-      <Layout>
-        {/* Header Section */}
-        <Layout.Section>
-          <Box padding="600" background="bg-surface-brand" borderRadius="300">
-            <BlockStack gap="300">
-              <InlineStack gap="300" align="start">
-                <Box padding="300" background="bg-surface-base" borderRadius="200">
-                  <Icon source="analytics" tone="base" />
-                </Box>
-                <BlockStack gap="200">
-                  <Text variant="headingLg" as="h2" tone="base">
-                    Analytics Dashboard
-                  </Text>
-                  <Text variant="bodyLg" as="p" tone="base">
-                    Track performance, conversions, and revenue from your QR codes and campaigns
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-            </BlockStack>
-          </Box>
-        </Layout.Section>
+  const headings = ['Rank', 'Link Code', 'Scans', 'Orders', 'Conversion Rate']
 
-        {/* Date Range Selector */}
-        <Layout.Section>
+  return (
+    <Page
+      title="Analytics"
+      subtitle="Track performance and optimize your marketing campaigns"
+    >
+      <BlockStack gap="500">
+        {/* Header Section */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" align="center">
+              <Icon source={HashtagIcon} />
+              <Text variant="headingMd" as="h2">Performance Analytics</Text>
+            </InlineStack>
+            <Text variant="bodyMd" as="p">
+              Monitor your marketing performance with detailed analytics and insights. Track conversions, revenue, and optimize your campaigns.
+            </Text>
+          </BlockStack>
+        </Card>
+
+        {/* Key Metrics */}
+        <InlineGrid columns={{ xs: 2, sm: 4 }} gap="300">
           <Card>
-            <BlockStack gap="400">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-info" borderRadius="100">
-                  <Icon source="calendar" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">Date Range</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Select the time period for your analytics
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-              
-              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                <Text variant="bodyMd" as="p">
-                  📅 Last 30 days (Date picker coming soon)
-                </Text>
-              </Box>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{analytics.totalScans.toLocaleString()}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
+              <Text variant="bodySm" as="p" tone="positive">+12% from last month</Text>
             </BlockStack>
           </Card>
-        </Layout.Section>
-
-        {/* Summary Stats */}
-        <Layout.Section>
-          <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-info" borderRadius="100">
-                    <Icon source="view" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Total Scans</Text>
-                    <Text variant="heading2xl" as="p" fontWeight="bold">
-                      {analyticsData.totalScans}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-info" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    +15% from last period
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-success" borderRadius="100">
-                    <Icon source="orders" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Total Orders</Text>
-                    <Text variant="heading2xl" as="p" fontWeight="bold">
-                      {analyticsData.totalOrders}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-success" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    +8% from last period
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-warning" borderRadius="100">
-                    <Icon source="analytics" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Conversion Rate</Text>
-                    <Text variant="heading2xl" as="p" fontWeight="bold">
-                      {analyticsData.conversionRate}%
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-warning" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    +2% from last period
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-critical" borderRadius="100">
-                    <Icon source="dollar" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="bodyMd" as="p" tone="subdued">Total Revenue</Text>
-                    <Text variant="heading2xl" as="p" fontWeight="bold">
-                      ${analyticsData.totalRevenue}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                <Box padding="200" background="bg-surface-critical" borderRadius="100">
-                  <Text variant="bodySm" as="p" tone="base" fontWeight="semibold">
-                    +22% from last period
-                  </Text>
-                </Box>
-              </BlockStack>
-            </Card>
-          </InlineGrid>
-        </Layout.Section>
+          <Card>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{analytics.totalOrders.toLocaleString()}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Total Orders</Text>
+              <Text variant="bodySm" as="p" tone="positive">+8% from last month</Text>
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">{analytics.conversionRate}%</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Conversion Rate</Text>
+              <Text variant="bodySm" as="p" tone="positive">+2.1% from last month</Text>
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="200">
+              <Text variant="headingLg" as="h3">${analytics.totalRevenue.toLocaleString()}</Text>
+              <Text variant="bodyMd" as="p" tone="subdued">Total Revenue</Text>
+              <Text variant="bodySm" as="p" tone="positive">+15% from last month</Text>
+            </BlockStack>
+          </Card>
+        </InlineGrid>
 
         {/* Performance Chart Placeholder */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                  <Icon source="chart" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">Performance Trends</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Track your scans and conversions over time
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-              
-              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
-                <BlockStack gap="300" align="center">
-                  <Icon source="chart" tone="subdued" />
-                  <Text variant="bodyMd" as="p" tone="subdued" alignment="center">
-                    📊 Interactive charts coming soon
-                  </Text>
-                  <Text variant="bodySm" as="p" tone="subdued" alignment="center">
-                    Visualize your campaign performance with detailed graphs and trends
-                  </Text>
-                </BlockStack>
-              </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Performance Trends</Text>
+            <Box background="bg-surface-secondary" padding="400" borderRadius="200">
+              <Text variant="bodyMd" as="p" alignment="center" tone="subdued">
+                📊 Performance charts will be displayed here
+              </Text>
+            </Box>
+          </BlockStack>
+        </Card>
 
         {/* Top Performing Links */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="300" align="space-between">
-                <InlineStack gap="200" align="start">
-                  <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                    <Icon source="star" tone="base" />
-                  </Box>
-                  <BlockStack gap="100">
-                    <Text variant="headingMd" as="h3">Top Performing Links</Text>
-                    <Text variant="bodySm" as="p" tone="subdued">
-                      Your best performing QR codes and permalinks
-                    </Text>
-                  </BlockStack>
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" align="center">
+              <Icon source={HashtagIcon} />
+              <Text variant="headingMd" as="h2">Top Performing Links</Text>
+            </InlineStack>
+            <Divider />
+            <DataTable
+              columnContentTypes={['text', 'text', 'numeric', 'numeric', 'text']}
+              headings={headings}
+              rows={topLinksRows}
+              footerContent={
+                <InlineStack align="space-between">
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Showing top {analytics.topLinks.length} performing links
+                  </Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Real-time analytics
+                  </Text>
                 </InlineStack>
-                <Badge status="success">Top Performers</Badge>
-              </InlineStack>
-              
-              <Divider />
-              
-              <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                <DataTable
-                  columnContentTypes={['text', 'text', 'text', 'text']}
-                  headings={['Link Code', 'Scans', 'Orders', 'Revenue']}
-                  rows={topLinksRows.map((row, index) => [
-                    <InlineStack gap="200" align="center">
-                      <Box padding="100" background="bg-surface-brand" borderRadius="100">
-                        <Text variant="bodySm" as="span" fontWeight="bold" tone="base">
-                          {index + 1}
-                        </Text>
-                      </Box>
-                      <Text variant="bodyMd" as="span" fontWeight="medium">{row[0]}</Text>
-                    </InlineStack>,
-                    <Text variant="bodyMd" as="span">{row[1]}</Text>,
-                    <Text variant="bodyMd" as="span">{row[2]}</Text>,
-                    <Text variant="bodyMd" as="span" fontWeight="semibold">{row[3]}</Text>
-                  ])}
-                  footerContent={
-                    <InlineStack gap="200" align="space-between">
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        Showing top {analyticsData.topLinks.length} links
-                      </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        Real-time analytics
-                      </Text>
-                    </InlineStack>
-                  }
-                />
-              </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
+              }
+            />
+          </BlockStack>
+        </Card>
+
+        {/* Date Range Selector */}
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Date Range</Text>
+            <InlineStack gap="200">
+              <Button>Last 7 days</Button>
+              <Button>Last 30 days</Button>
+              <Button>Last 90 days</Button>
+              <Button>Custom range</Button>
+            </InlineStack>
+          </BlockStack>
+        </Card>
+      </BlockStack>
     </Page>
   )
 }
+
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AnalyticsPageContent />
+    </Suspense>
+  )
+}
+
+export const dynamic = 'force-dynamic'

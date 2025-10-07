@@ -32,7 +32,8 @@ interface Merchant {
 }
 
 interface LinkCreatorProps {
-  merchant: Merchant
+  merchantId: string
+  shopDomain: string
   onClose: () => void
 }
 
@@ -53,7 +54,7 @@ interface FormData {
   utmContent: string
 }
 
-export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
+export default function LinkCreator({ merchantId, shopDomain, onClose }: LinkCreatorProps) {
   const [products, setProducts] = useState<ShopifyProduct[]>([])
   const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | null>(null)
   const [lookupProduct, setLookupProduct] = useState<any>(null)
@@ -90,13 +91,14 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
       setLoading(true)
       
       // Demo mode - show mock products if no real data
-      const isDemo = merchant.id === 'demo-merchant'
+      const isDemo = merchantId === '550e8400-e29b-41d4-a716-446655440000'
       
       if (isDemo) {
         const mockProducts = [
           {
             id: 'demo-product-1',
             title: 'Demo Running Shoes',
+            handle: 'demo-running-shoes',
             variants: [
               { id: 'demo-variant-1', title: 'Size 8 - Black', price: '99.99', sku: 'RUN-BLK-8', inventory_quantity: 50, available: true },
               { id: 'demo-variant-2', title: 'Size 9 - Black', price: '99.99', sku: 'RUN-BLK-9', inventory_quantity: 30, available: true },
@@ -106,9 +108,28 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
           {
             id: 'demo-product-2',
             title: 'Demo T-Shirt',
+            handle: 'demo-t-shirt',
             variants: [
               { id: 'demo-variant-4', title: 'Medium - Blue', price: '29.99', sku: 'TSH-BLU-M', inventory_quantity: 100, available: true },
               { id: 'demo-variant-5', title: 'Large - Blue', price: '29.99', sku: 'TSH-BLU-L', inventory_quantity: 75, available: true }
+            ]
+          },
+          {
+            id: 'demo-product-3',
+            title: 'Demo Wireless Headphones',
+            handle: 'demo-wireless-headphones',
+            variants: [
+              { id: 'demo-variant-6', title: 'Black', price: '149.99', sku: 'HP-BLK', inventory_quantity: 20, available: true },
+              { id: 'demo-variant-7', title: 'White', price: '149.99', sku: 'HP-WHT', inventory_quantity: 15, available: true }
+            ]
+          },
+          {
+            id: 'demo-product-4',
+            title: 'Demo Fitness Tracker',
+            handle: 'demo-fitness-tracker',
+            variants: [
+              { id: 'demo-variant-8', title: 'Black', price: '199.99', sku: 'FT-BLK', inventory_quantity: 30, available: true },
+              { id: 'demo-variant-9', title: 'Pink', price: '199.99', sku: 'FT-PNK', inventory_quantity: 25, available: true }
             ]
           }
         ]
@@ -121,14 +142,14 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
       const { data: merchantData } = await supabase
         .from('merchants')
         .select('access_token')
-        .eq('id', merchant.id)
+        .eq('id', merchantId)
         .single()
 
       if (!merchantData) {
         throw new Error('Merchant not found')
       }
 
-      const productsData = await fetchShopifyProducts(merchant.shop_domain, merchantData.access_token)
+      const productsData = await fetchShopifyProducts(shopDomain, merchantData.access_token)
       setProducts(productsData)
     } catch (err) {
       setError('Failed to fetch products')
@@ -163,7 +184,7 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          shop_domain: merchant.shop_domain,
+          shop_domain: shopDomain,
           input: formData.productHandleInput
         })
       })
@@ -203,7 +224,7 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          merchant_id: merchant.id,
+          merchant_id: merchantId,
           url: formData.urlInput,
           utm_source: formData.utmSource || null,
           utm_medium: formData.utmMedium || null,
@@ -262,10 +283,10 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
       }
 
       // Build target URL (Shopify product permalink with variant)
-      const targetUrl = `https://${merchant.shop_domain}/products/${productHandle}?variant=${formData.variantId}`
+      const targetUrl = `https://${shopDomain}/products/${productHandle}?variant=${formData.variantId}`
 
       // Demo mode - skip database operations
-      const isDemo = merchant.id === 'demo-merchant'
+      const isDemo = merchantId === '550e8400-e29b-41d4-a716-446655440000'
       
       if (!isDemo) {
         // Create discount code if provided
@@ -275,11 +296,11 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
             const { data: merchantData } = await supabase
               .from('merchants')
               .select('access_token')
-              .eq('id', merchant.id)
+              .eq('id', merchantId)
               .single()
 
             if (merchantData) {
-              await createShopifyDiscount(merchant.shop_domain, merchantData.access_token, {
+              await createShopifyDiscount(shopDomain, merchantData.access_token, {
                 code: discountCode,
                 percentage: formData.discountType === 'percentage' ? parseFloat(formData.discountValue) : undefined,
                 amount: formData.discountType === 'amount' ? parseFloat(formData.discountValue) : undefined
@@ -296,7 +317,7 @@ export default function LinkCreator({ merchant, onClose }: LinkCreatorProps) {
         const { error: linkError } = await supabase
           .from('links')
           .insert({
-            merchant_id: merchant.id,
+            merchant_id: merchantId,
             code: code,
             product_id: formData.productId,
             product_handle: productHandle,

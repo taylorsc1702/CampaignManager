@@ -1,310 +1,194 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { 
   Page, 
-  Layout, 
   Card, 
-  Text,
-  BlockStack,
-  Button,
-  Banner,
-  FormLayout,
+  Button, 
   TextField,
-  Select,
+  Text, 
+  BlockStack, 
+  InlineStack,
   Icon,
   Box,
   Divider,
   InlineGrid,
-  Badge,
-  InlineStack
+  Badge
 } from '@shopify/polaris'
-import { supabase } from '@/lib/supabase'
+import { SettingsIcon } from '@shopify/polaris-icons'
+import '@shopify/polaris/build/esm/styles.css'
 
-interface Merchant {
-  id: string
-  shop_domain: string
-  plan: 'starter' | 'growth' | 'pro'
-}
+function SettingsPageContent() {
+  const [settings, setSettings] = useState({
+    shopDomain: 'demo-shop.myshopify.com',
+    plan: 'pro',
+    webhookUrl: 'https://your-app.vercel.app/api/webhooks/orders-create',
+    timezone: 'UTC',
+    currency: 'USD'
+  })
+  const [loading, setLoading] = useState(false)
 
-export default function SettingsPage() {
-  const [merchant, setMerchant] = useState<Merchant | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchMerchant()
-  }, [])
-
-  const fetchMerchant = async () => {
+  const handleSave = async () => {
+    setLoading(true)
     try {
-      const urlParams = new URLSearchParams(window.location.search)
-      const shop = urlParams.get('shop')
-      
-      if (!shop) return
-
-      const { data, error } = await supabase
-        .from('merchants')
-        .select('*')
-        .eq('shop_domain', shop)
-        .single()
-
-      if (error) throw error
-
-      setMerchant(data)
+      // Save settings logic here
+      console.log('Saving settings:', settings)
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
     } catch (error) {
-      console.error('Failed to fetch merchant:', error)
-      setError('Failed to load settings')
+      console.error('Error saving settings:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const updatePlan = async (newPlan: 'starter' | 'growth' | 'pro') => {
-    if (!merchant) return
-
-    try {
-      setSaving(true)
-      setError(null)
-
-      const { error } = await supabase
-        .from('merchants')
-        .update({ plan: newPlan })
-        .eq('id', merchant.id)
-
-      if (error) throw error
-
-      setMerchant(prev => prev ? { ...prev, plan: newPlan } : null)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
-    } catch (error) {
-      console.error('Failed to update plan:', error)
-      setError('Failed to update plan')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const planOptions = [
-    { label: 'Starter - 100 links/month', value: 'starter' },
-    { label: 'Growth - 1,000 links/month', value: 'growth' },
-    { label: 'Pro - Unlimited links', value: 'pro' }
-  ]
-
-  if (loading) {
-    return (
-      <Page title="Settings">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <Text variant="bodyMd" as="p">Loading settings...</Text>
-              </div>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    )
-  }
-
   return (
-    <Page 
+    <Page
       title="Settings"
-      subtitle="Configure your app preferences and account settings"
+      subtitle="Configure your app settings and preferences"
+      primaryAction={{
+        content: 'Save Changes',
+        onAction: handleSave,
+        loading
+      }}
     >
-      <Layout>
+      <BlockStack gap="500">
         {/* Header Section */}
-        <Layout.Section>
-          <Box padding="600" background="bg-surface-brand" borderRadius="300">
-            <BlockStack gap="300">
-              <InlineStack gap="300" align="start">
-                <Box padding="300" background="bg-surface-base" borderRadius="200">
-                  <Icon source="settings" tone="base" />
-                </Box>
-                <BlockStack gap="200">
-                  <Text variant="headingLg" as="h2" tone="base">
-                    Settings & Configuration
-                  </Text>
-                  <Text variant="bodyLg" as="p" tone="base">
-                    Manage your account settings, plan preferences, and app configuration
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-            </BlockStack>
-          </Box>
-        </Layout.Section>
-
-        {/* Status Messages */}
-        <Layout.Section>
-          {success && (
-            <Banner tone="success">
-              <Text variant="bodyMd" as="p">Settings updated successfully!</Text>
-            </Banner>
-          )}
-
-          {error && (
-            <Banner tone="critical">
-              <Text variant="bodyMd" as="p">{error}</Text>
-            </Banner>
-          )}
-        </Layout.Section>
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" align="center">
+              <Icon source={SettingsIcon} />
+              <Text variant="headingMd" as="h2">App Configuration</Text>
+            </InlineStack>
+            <Text variant="bodyMd" as="p">
+              Manage your app settings, webhook configuration, and account preferences.
+            </Text>
+          </BlockStack>
+        </Card>
 
         {/* Account Information */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                  <Icon source="person" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">Account Information</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Your account details and subscription information
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-              
-              <Divider />
-              
-              <FormLayout>
-                <TextField
-                  label="Shop Domain"
-                  value={merchant?.shop_domain || ''}
-                  readOnly
-                  autoComplete="off"
-                  helpText="Your Shopify store domain"
-                />
-
-                <Select
-                  label="Plan"
-                  options={planOptions}
-                  value={merchant?.plan || 'starter'}
-                  onChange={updatePlan}
-                  disabled={saving}
-                  helpText="Choose the plan that best fits your needs"
-                />
-
-                <TextField
-                  label="App Domain"
-                  value={process.env.NEXT_PUBLIC_APP_DOMAIN || 'go.yourapp.com'}
-                  readOnly
-                  autoComplete="off"
-                  helpText="This is the domain used for your short links"
-                />
-              </FormLayout>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Account Information</Text>
+            <Divider />
+            <InlineGrid columns={{ xs: 2 }} gap="300">
+              <TextField
+                label="Shop Domain"
+                value={settings.shopDomain}
+                onChange={(value) => setSettings(prev => ({ ...prev, shopDomain: value }))}
+                disabled
+                helpText="Your Shopify store domain"
+              />
+              <TextField
+                label="Current Plan"
+                value={settings.plan}
+                onChange={(value) => setSettings(prev => ({ ...prev, plan: value }))}
+                disabled
+                helpText="Your current subscription plan"
+              />
+            </InlineGrid>
+            <InlineGrid columns={{ xs: 2 }} gap="300">
+              <TextField
+                label="Timezone"
+                value={settings.timezone}
+                onChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
+                helpText="Default timezone for reports and analytics"
+              />
+              <TextField
+                label="Currency"
+                value={settings.currency}
+                onChange={(value) => setSettings(prev => ({ ...prev, currency: value }))}
+                helpText="Default currency for revenue tracking"
+              />
+            </InlineGrid>
+          </BlockStack>
+        </Card>
 
         {/* Webhook Configuration */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-warning" borderRadius="100">
-                  <Icon source="webhook" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">Webhook Configuration</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Set up automatic order tracking with Shopify webhooks
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-              
-              <Divider />
-              
-              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
-                <BlockStack gap="400">
-                  <Text variant="bodyMd" as="p">
-                    To track orders automatically, configure this webhook URL in your Shopify admin:
-                  </Text>
-                  
-                  <TextField
-                    label="Order Webhook URL"
-                    value={`${process.env.SHOPIFY_APP_URL}/api/webhooks/orders-create`}
-                    readOnly
-                    autoComplete="off"
-                    helpText="Add this URL in Shopify Admin > Settings > Notifications > Webhooks"
-                  />
-
-                  <Box padding="300" background="bg-surface-info" borderRadius="200">
-                    <BlockStack gap="200">
-                      <Text variant="bodySm" as="p" fontWeight="semibold">
-                        Webhook Settings:
-                      </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        Event: Order creation<br />
-                        Format: JSON
-                      </Text>
-                    </BlockStack>
-                  </Box>
-                </BlockStack>
-              </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Webhook Configuration</Text>
+            <Divider />
+            <TextField
+              label="Order Webhook URL"
+              value={settings.webhookUrl}
+              onChange={(value) => setSettings(prev => ({ ...prev, webhookUrl: value }))}
+              helpText="This URL will receive order notifications from Shopify"
+            />
+            <Box background="bg-surface-secondary" padding="300" borderRadius="200">
+              <BlockStack gap="200">
+                <Text variant="bodyMd" as="p" fontWeight="semibold">Webhook Setup Instructions:</Text>
+                <Text variant="bodySm" as="p">1. Copy the webhook URL above</Text>
+                <Text variant="bodySm" as="p">2. Go to your Shopify admin → Settings → Notifications</Text>
+                <Text variant="bodySm" as="p">3. Add a new webhook for "Order creation"</Text>
+                <Text variant="bodySm" as="p">4. Paste the URL and select JSON format</Text>
+              </BlockStack>
+            </Box>
+          </BlockStack>
+        </Card>
 
         {/* App Information */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack gap="200" align="start">
-                <Box padding="200" background="bg-surface-brand" borderRadius="100">
-                  <Icon source="info" tone="base" />
-                </Box>
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h3">App Information</Text>
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Learn more about Campaign Manager and its features
-                  </Text>
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">App Information</Text>
+            <Divider />
+            <InlineGrid columns={{ xs: 2 }} gap="300">
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">CampaignLink</Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">Version 1.0.0</Text>
+                  <Text variant="bodySm" as="p">Marketing link and QR code management for Shopify stores</Text>
                 </BlockStack>
-              </InlineStack>
-              
-              <Divider />
-              
-              <Box padding="400" background="bg-surface-secondary" borderRadius="200">
-                <BlockStack gap="400">
-                  <Text variant="bodyMd" as="p">
-                    <strong>Campaign Manager</strong> helps you track QR codes and permalinks for your Shopify store.
-                  </Text>
-                  
-                  <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
-                    <Box padding="300" background="bg-surface-success" borderRadius="200">
-                      <BlockStack gap="200">
-                        <Text variant="bodySm" as="p" fontWeight="semibold">
-                          🎯 Core Features:
-                        </Text>
-                        <ul style={{ margin: 0, paddingLeft: '1rem' }}>
-                          <li>Generate QR codes and short links</li>
-                          <li>Track scans and conversions</li>
-                          <li>UTM parameter tracking</li>
-                        </ul>
-                      </BlockStack>
-                    </Box>
+              </Card>
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Features</Text>
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" as="p">✓ Link creation and management</Text>
+                    <Text variant="bodySm" as="p">✓ QR code generation</Text>
+                    <Text variant="bodySm" as="p">✓ Campaign tracking</Text>
+                    <Text variant="bodySm" as="p">✓ Analytics and reporting</Text>
+                  </BlockStack>
+                </BlockStack>
+              </Card>
+            </InlineGrid>
+          </BlockStack>
+        </Card>
 
-                    <Box padding="300" background="bg-surface-info" borderRadius="200">
-                      <BlockStack gap="200">
-                        <Text variant="bodySm" as="p" fontWeight="semibold">
-                          🚀 Advanced Features:
-                        </Text>
-                        <ul style={{ margin: 0, paddingLeft: '1rem' }}>
-                          <li>Automatic discount code integration</li>
-                          <li>Analytics dashboard</li>
-                          <li>Bulk operations and CSV import</li>
-                        </ul>
-                      </BlockStack>
-                    </Box>
-                  </InlineGrid>
+        {/* Support */}
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">Support & Resources</Text>
+            <Divider />
+            <InlineGrid columns={{ xs: 2 }} gap="300">
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Documentation</Text>
+                  <Text variant="bodySm" as="p">Learn how to use CampaignLink effectively</Text>
+                  <Button>View Documentation</Button>
                 </BlockStack>
-              </Box>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
+              </Card>
+              <Card>
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h3">Contact Support</Text>
+                  <Text variant="bodySm" as="p">Get help from our support team</Text>
+                  <Button>Contact Support</Button>
+                </BlockStack>
+              </Card>
+            </InlineGrid>
+          </BlockStack>
+        </Card>
+      </BlockStack>
     </Page>
   )
 }
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SettingsPageContent />
+    </Suspense>
+  )
+}
+
+export const dynamic = 'force-dynamic'

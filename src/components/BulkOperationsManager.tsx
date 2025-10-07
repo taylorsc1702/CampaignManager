@@ -26,7 +26,8 @@ interface Merchant {
 }
 
 interface BulkOperationsManagerProps {
-  merchant: Merchant
+  merchantId: string
+  onClose: () => void
 }
 
 interface BulkOperation {
@@ -43,7 +44,7 @@ interface BulkOperation {
   completed_at?: string
 }
 
-export default function BulkOperationsManager({ merchant }: BulkOperationsManagerProps) {
+export default function BulkOperationsManager({ merchantId, onClose }: BulkOperationsManagerProps) {
   const [operations, setOperations] = useState<BulkOperation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +62,7 @@ export default function BulkOperationsManager({ merchant }: BulkOperationsManage
   const fetchOperations = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/bulk/operations?merchant_id=${merchant.id}&page=${currentPage}&limit=${itemsPerPage}`)
+      const response = await fetch(`/api/bulk/operations?merchant_id=${merchantId}&page=${currentPage}&limit=${itemsPerPage}`)
       const result = await response.json()
 
       if (!response.ok) {

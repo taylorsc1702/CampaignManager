@@ -33,7 +33,8 @@ interface Merchant {
 }
 
 interface BulkPermalinkCreatorProps {
-  merchant: Merchant
+  merchantId: string
+  shopDomain: string
   onClose: () => void
 }
 
@@ -76,7 +77,7 @@ interface PermalinkFormData {
   campaign_id?: string
 }
 
-export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalinkCreatorProps) {
+export default function BulkPermalinkCreator({ merchantId, shopDomain, onClose }: BulkPermalinkCreatorProps) {
   const [mode, setMode] = useState<'manual' | 'csv'>('manual')
   const [loading, setLoading] = useState(false)
   const [processing, setProcessing] = useState(false)
@@ -115,12 +116,67 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
     fetchCampaigns()
   }, [])
 
+  // Update existing permalinks when template is selected
+  useEffect(() => {
+    if (selectedTemplate && templates.length > 0) {
+      const template = templates.find(t => t.id === selectedTemplate)
+      if (template) {
+        setPermalinks(prev => prev.map(permalink => ({
+          ...permalink,
+          utm_source: template.utm_source || permalink.utm_source,
+          utm_medium: template.utm_medium || permalink.utm_medium,
+          utm_campaign: template.utm_campaign || permalink.utm_campaign,
+          utm_term: template.utm_term || permalink.utm_term,
+          utm_content: template.utm_content || permalink.utm_content
+        })))
+      }
+    }
+  }, [selectedTemplate, templates])
+
   const fetchTemplates = async () => {
     try {
+      // Check if this is a demo merchant
+      const isDemo = merchantId === '550e8400-e29b-41d4-a716-446655440000'
+      
+      if (isDemo) {
+        // Set demo templates
+        const demoTemplates = [
+          {
+            id: 'demo-template-1',
+            name: 'Social Media Campaign',
+            utm_source: 'facebook',
+            utm_medium: 'social',
+            utm_campaign: 'social-campaign-2024',
+            utm_term: '',
+            utm_content: 'post'
+          },
+          {
+            id: 'demo-template-2',
+            name: 'Email Newsletter',
+            utm_source: 'newsletter',
+            utm_medium: 'email',
+            utm_campaign: 'weekly-newsletter',
+            utm_term: '',
+            utm_content: 'banner'
+          },
+          {
+            id: 'demo-template-3',
+            name: 'Google Ads',
+            utm_source: 'google',
+            utm_medium: 'cpc',
+            utm_campaign: 'search-campaign',
+            utm_term: 'keywords',
+            utm_content: 'ad'
+          }
+        ]
+        setTemplates(demoTemplates)
+        return
+      }
+
       const { data, error } = await supabase
         .from('link_templates')
         .select('*')
-        .eq('merchant_id', merchant.id)
+        .eq('merchant_id', merchantId)
         .order('name')
 
       if (error) throw error
@@ -135,7 +191,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
       const { data, error } = await supabase
         .from('campaigns')
         .select('id, name')
-        .eq('merchant_id', merchant.id)
+        .eq('merchant_id', merchantId)
         .order('name')
 
       if (error) throw error
@@ -228,10 +284,10 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
       const values = parseCSVLine(line)
       const row: any = {
         url: '',
-        code: '',
-        utm_source: '',
-        utm_medium: '',
-        utm_campaign: ''
+        code: 'Auto-generated',
+        utm_source: '-',
+        utm_medium: '-',
+        utm_campaign: '-'
       }
 
       if (hasHeaders && headers.length > 0) {
@@ -243,6 +299,10 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
             switch (cleanHeader) {
               case 'url':
                 row.url = value
+                break
+              case 'producthandle':
+                // Generate preview URL for product handle
+                row.url = `https://${shopDomain}/products/${value}`
                 break
               case 'code':
                 row.code = value
@@ -261,11 +321,19 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
         })
       } else {
         // Map by position
-        if (values.length > 0) row.url = values[0] || ''
-        if (values.length > 1) row.code = values[1] || ''
-        if (values.length > 2) row.utm_source = values[2] || ''
-        if (values.length > 3) row.utm_medium = values[3] || ''
-        if (values.length > 4) row.utm_campaign = values[4] || ''
+        if (values.length > 0) {
+          // Check if first column looks like a product handle or URL
+          const firstValue = values[0] || ''
+          if (firstValue.includes('/products/')) {
+            row.url = firstValue
+          } else {
+            row.url = `https://${shopDomain}/products/${firstValue}`
+          }
+        }
+        if (values.length > 1) row.code = values[1] || 'Auto-generated'
+        if (values.length > 2) row.utm_source = values[2] || '-'
+        if (values.length > 3) row.utm_medium = values[3] || '-'
+        if (values.length > 4) row.utm_campaign = values[4] || '-'
       }
 
       preview.push(row)
@@ -338,7 +406,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            merchant_id: merchant.id,
+            merchant_id: merchantId,
             csv_data: csvData,
             template_id: selectedTemplate || undefined,
             campaign_id: selectedCampaign || undefined,
@@ -382,7 +450,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            merchant_id: merchant.id,
+            merchant_id: merchantId,
             permalinks: permalinkData,
             template_id: selectedTemplate || undefined
           })
@@ -419,7 +487,7 @@ export default function BulkPermalinkCreator({ merchant, onClose }: BulkPermalin
 
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/bulk/permalinks?merchant_id=${merchant.id}&operation_id=${operation.id}`)
+        const response = await fetch(`/api/bulk/permalinks?merchant_id=${merchantId}&operation_id=${operation.id}`)
         const result = await response.json()
         
         if (result.operations && result.operations.length > 0) {

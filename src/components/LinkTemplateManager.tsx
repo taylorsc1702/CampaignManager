@@ -26,7 +26,7 @@ interface Merchant {
 }
 
 interface LinkTemplateManagerProps {
-  merchant: Merchant
+  merchantId: string
   onClose: () => void
 }
 
@@ -45,7 +45,7 @@ interface LinkTemplate {
   is_default: boolean
 }
 
-export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateManagerProps) {
+export default function LinkTemplateManager({ merchantId, onClose }: LinkTemplateManagerProps) {
   const [templates, setTemplates] = useState<LinkTemplate[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -77,7 +77,7 @@ export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateM
       const { data, error } = await supabase
         .from('link_templates')
         .select('*')
-        .eq('merchant_id', merchant.id)
+        .eq('merchant_id', merchantId)
         .order('name')
 
       if (error) throw error
@@ -138,7 +138,7 @@ export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateM
       }
 
       const templateData = {
-        merchant_id: merchant.id,
+        merchant_id: merchantId,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         utm_source: formData.utm_source.trim() || null,
@@ -158,7 +158,7 @@ export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateM
           .from('link_templates')
           .update(templateData)
           .eq('id', editingTemplate.id)
-          .eq('merchant_id', merchant.id)
+          .eq('merchant_id', merchantId)
 
         if (updateError) throw updateError
       } else {
@@ -175,7 +175,7 @@ export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateM
         await supabase
           .from('link_templates')
           .update({ is_default: false })
-          .eq('merchant_id', merchant.id)
+          .eq('merchant_id', merchantId)
           .neq('id', editingTemplate?.id || 'new')
 
         // Set this one as default
@@ -183,7 +183,7 @@ export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateM
           const { data: newTemplate } = await supabase
             .from('link_templates')
             .select('id')
-            .eq('merchant_id', merchant.id)
+            .eq('merchant_id', merchantId)
             .eq('name', formData.name.trim())
             .single()
 
@@ -222,7 +222,7 @@ export default function LinkTemplateManager({ merchant, onClose }: LinkTemplateM
         .from('link_templates')
         .delete()
         .eq('id', template.id)
-        .eq('merchant_id', merchant.id)
+        .eq('merchant_id', merchantId)
 
       if (error) throw error
       await fetchTemplates()
