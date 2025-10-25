@@ -4,6 +4,7 @@ import type {
 } from "react-router";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { Page, Card, Text, Button, Layout } from "@shopify/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -12,14 +13,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function CampaignsPage() {
   return (
-    <s-page heading="Campaigns">
-      <s-section heading="Marketing Campaigns">
-        <s-paragraph>
-          Organize and manage your marketing campaigns with permalinks and QR codes.
-        </s-paragraph>
-        <s-button variant="primary">Create New Campaign</s-button>
-      </s-section>
-    </s-page>
+    <Page title="Campaigns">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <Text variant="headingMd" as="h2">Marketing Campaigns</Text>
+            <Text variant="bodyMd" as="p">
+              Organize and manage your marketing campaigns with permalinks and QR codes.
+            </Text>
+            <Button variant="primary">Create New Campaign</Button>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 

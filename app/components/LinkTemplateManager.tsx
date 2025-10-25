@@ -17,7 +17,7 @@ import {
   InlineError,
   EmptyState
 } from '@shopify/polaris'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../lib/supabase'
 
 interface Merchant {
   id: string

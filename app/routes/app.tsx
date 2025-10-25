@@ -1,7 +1,9 @@
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { Outlet, useLoaderData, useRouteError } from "react-router";
+import { Outlet, useLoaderData, useRouteError, Link } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
+import { AppProvider as PolarisAppProvider, Navigation, Frame } from "@shopify/polaris";
+import "@shopify/polaris/build/esm/styles.css";
 
 import { authenticate } from "../shopify.server";
 
@@ -15,17 +17,52 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function App() {
   const { apiKey } = useLoaderData<typeof loader>();
 
+  const navigationMarkup = (
+    <Navigation location="/">
+      <Navigation.Section
+        items={[
+          {
+            label: 'Dashboard',
+            url: '/app',
+            icon: 'home'
+          },
+          {
+            label: 'Links',
+            url: '/app/links',
+            icon: 'link'
+          },
+          {
+            label: 'Campaigns',
+            url: '/app/campaigns',
+            icon: 'campaign'
+          },
+          {
+            label: 'Analytics',
+            url: '/app/analytics',
+            icon: 'analytics'
+          },
+          {
+            label: 'Team',
+            url: '/app/team',
+            icon: 'team'
+          },
+          {
+            label: 'Settings',
+            url: '/app/settings',
+            icon: 'settings'
+          }
+        ]}
+      />
+    </Navigation>
+  );
+
   return (
     <AppProvider embedded apiKey={apiKey}>
-      <s-app-nav>
-        <s-link href="/app">Dashboard</s-link>
-        <s-link href="/app/links">Links</s-link>
-        <s-link href="/app/campaigns">Campaigns</s-link>
-        <s-link href="/app/analytics">Analytics</s-link>
-        <s-link href="/app/team">Team</s-link>
-        <s-link href="/app/settings">Settings</s-link>
-      </s-app-nav>
-      <Outlet />
+      <PolarisAppProvider i18n={{}}>
+        <Frame navigation={navigationMarkup}>
+          <Outlet />
+        </Frame>
+      </PolarisAppProvider>
     </AppProvider>
   );
 }

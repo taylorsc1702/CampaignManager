@@ -16,11 +16,11 @@ import {
   Select,
   InlineError
 } from '@shopify/polaris'
-import { supabase } from '@/lib/supabase'
-import { fetchShopifyProducts, createShopifyDiscount } from '@/lib/shopify'
-import { generateQRCode, buildShortUrl } from '@/lib/qrcode'
-import { generateShortCode } from '@/lib/shopify'
-import type { ShopifyProduct, ShopifyVariant } from '@/lib/shopify'
+import { supabase } from '../lib/supabase'
+import { fetchShopifyProducts, createShopifyDiscount } from '../lib/shopify'
+import { generateQRCode, buildShortUrl } from '../lib/qrcode'
+import { generateShortCode } from '../lib/shopify'
+import type { ShopifyProduct, ShopifyVariant } from '../lib/shopify'
 
 interface Merchant {
   id: string

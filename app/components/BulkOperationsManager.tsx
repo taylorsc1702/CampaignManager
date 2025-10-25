@@ -16,8 +16,8 @@ import {
   ProgressBar,
   Pagination
 } from '@shopify/polaris'
-import { supabase } from '@/lib/supabase'
-import { buildShortUrl } from '@/lib/qrcode'
+import { supabase } from '../lib/supabase'
+import { buildShortUrl } from '../lib/qrcode'
 
 interface Merchant {
   id: string

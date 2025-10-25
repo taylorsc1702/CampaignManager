@@ -18,7 +18,7 @@ import {
   Icon
 } from '@shopify/polaris'
 import { DeleteIcon, PersonIcon } from '@shopify/polaris-icons'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../lib/supabase'
 
 interface Merchant {
   id: string

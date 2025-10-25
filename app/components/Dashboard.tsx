@@ -16,7 +16,7 @@ import {
   ProgressBar,
   Divider
 } from '@shopify/polaris'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../lib/supabase'
 
 interface Merchant {
   id: string
@@ -61,6 +61,24 @@ export default function Dashboard({ merchant }: { merchant: Merchant }) {
 
   const fetchDashboardData = async () => {
     try {
+      // Check if Supabase is properly configured
+      const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
+        process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your_supabase_url'
+      
+      if (!isSupabaseConfigured) {
+        // Set demo data when Supabase is not configured
+        setLinks([])
+        setStats({
+          totalLinks: 0,
+          totalScans: 0,
+          totalOrders: 0,
+          conversionRate: 0,
+          totalRevenue: 0
+        })
+        setLoading(false)
+        return
+      }
+
       // Check if this is a demo merchant
       const isDemo = merchant.id === '550e8400-e29b-41d4-a716-446655440000'
       

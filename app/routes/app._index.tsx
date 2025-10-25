@@ -5,6 +5,7 @@ import type {
 } from "react-router";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { Page } from "@shopify/polaris";
 import Dashboard from "../components/Dashboard";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -21,9 +22,9 @@ export default function Index() {
   });
 
   return (
-    <s-page heading="CampaignLink Dashboard">
+    <Page title="CampaignLink Dashboard">
       <Dashboard merchant={merchant} />
-    </s-page>
+    </Page>
   );
 }
 

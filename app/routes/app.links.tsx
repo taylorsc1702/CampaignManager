@@ -5,6 +5,7 @@ import type {
 } from "react-router";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { Page, Card, Text, Button, BlockStack, InlineStack, Layout } from "@shopify/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -20,18 +21,25 @@ export default function LinksPage() {
   });
 
   return (
-    <s-page heading="Links Management">
-      <s-section heading="Your Marketing Links">
-        <s-paragraph>
-          Manage and track all your marketing links, QR codes, and campaigns.
-        </s-paragraph>
-        
-        <s-stack direction="block" gap="base">
-          <s-button variant="primary">Create New Link</s-button>
-          <s-button variant="secondary">Bulk Upload</s-button>
-        </s-stack>
-      </s-section>
-    </s-page>
+    <Page title="Links Management">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text variant="headingMd" as="h2">Your Marketing Links</Text>
+              <Text variant="bodyMd" as="p">
+                Manage and track all your marketing links, QR codes, and campaigns.
+              </Text>
+              
+              <InlineStack gap="200">
+                <Button variant="primary">Create New Link</Button>
+                <Button variant="secondary">Bulk Upload</Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 
