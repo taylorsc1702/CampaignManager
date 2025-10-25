@@ -1,7 +1,7 @@
 import { createRequestHandler } from '@react-router/node';
 
 // Import the built server
-import build from '../build/server/index.js';
+import * as build from '../build/server/index.js';
 
 // Create the request handler
 const handler = createRequestHandler({
