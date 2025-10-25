@@ -1,7 +1,7 @@
-const { createRequestHandler } = require('@react-router/node');
+import { createRequestHandler } from '@react-router/node';
 
 // Import the built server
-const build = require('../build/server/index.js');
+import build from '../build/server/index.js';
 
 // Create the request handler
 const handler = createRequestHandler({
@@ -10,4 +10,4 @@ const handler = createRequestHandler({
 });
 
 // Export as Vercel function
-module.exports = handler;
+export default handler;
