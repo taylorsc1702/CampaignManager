@@ -1,21 +1,21 @@
 FROM node:18-alpine
-RUN apk add --no-cache openssl
-
-EXPOSE 3000
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Copy package files
+COPY package*.json ./
 
-COPY package.json package-lock.json* ./
+# Install dependencies
+RUN npm ci --only=production
 
-RUN npm ci --omit=dev && npm cache clean --force
-# Remove CLI packages since we don't need them in production by default.
-# Remove this line if you want to run CLI commands in your container.
-RUN npm remove @shopify/cli
-
+# Copy source code
 COPY . .
 
+# Build the app
 RUN npm run build
 
-CMD ["npm", "run", "docker-start"]
+# Expose port
+EXPOSE 3000
+
+# Start the app
+CMD ["npm", "start"]
