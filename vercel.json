@@ -5,14 +5,14 @@
   "installCommand": "npm install",
   "framework": null,
   "functions": {
-    "build/server/index.js": {
+    "api/index.js": {
       "runtime": "@vercel/node@3.0.7"
     }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/build/server/index.js"
+      "dest": "/api/index.js"
     }
   ]
 }
