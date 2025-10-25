@@ -9,4 +9,5 @@ const handler = createRequestHandler({
   mode: process.env.NODE_ENV || 'production',
 });
 
+// Export as Vercel function
 module.exports = handler;
