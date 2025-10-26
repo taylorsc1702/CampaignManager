@@ -2,7 +2,7 @@
 
 client_id = "9ef5423a76e6f22b07344e0af18ec542"
 name = "CampaignLink"
-application_url = "https://satisfied-jade-really-pages.trycloudflare.com"
+application_url = "https://campaignmanager-pqjq.onrender.com"
 embedded = true
 
 [build]
@@ -18,4 +18,4 @@ optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://satisfied-jade-really-pages.trycloudflare.com/api/auth" ]
+redirect_urls = [ "https://campaignmanager-pqjq.onrender.com/api/auth" ]
