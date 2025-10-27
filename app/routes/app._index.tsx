@@ -20,7 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw new Error('Merchant not found. Please reinstall the app.');
   }
 
-  assure Fetch recent links
+  // Fetch recent links
   const { data: linksData } = await supabase
     .from('links')
     .select('id, code, product_id, variant_id, quantity, active, created_at')
