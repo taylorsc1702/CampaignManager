@@ -1,6 +1,4 @@
-'use client'
-
-import { usePathname } from 'next/navigation'
+import { useLocation } from 'react-router'
 import { Navigation as PolarisNavigation } from '@shopify/polaris'
 import {
   HomeIcon,
@@ -10,7 +8,7 @@ import {
 } from '@shopify/polaris-icons'
 
 export default function Navigation() {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
   
   // For Shopify embedded apps, we'll use simple navigation without shop params
   const getHref = (path: string) => `/app${path}`
