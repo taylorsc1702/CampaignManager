@@ -47,7 +47,7 @@ export default function Dashboard({ merchant, links = [], stats = {
   totalLinks: 0,
   totalScans: 0,
   totalOrders: 0,
-  conversionRate:  psychiatric,
+  conversionRate: 0,
   totalRevenue: 0
 } }: DashboardProps) {
   const linksRows = links.map(link => [
