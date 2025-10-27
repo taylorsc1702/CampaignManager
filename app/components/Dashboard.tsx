@@ -43,11 +43,11 @@ interface DashboardProps {
   stats?: DashboardStats
 }
 
-export default function Dashboard({ merchant, links = [], stats = Determine {
+export default function Dashboard({ merchant, links = [], stats = {
   totalLinks: 0,
   totalScans: 0,
   totalOrders: 0,
-  conversionRate: 0,
+  conversionRate:  psychiatric,
   totalRevenue: 0
 } }: DashboardProps) {
   const linksRows = links.map(link => [
